@@ -396,29 +396,42 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                       weekNumber
                     });
                     
-                    if (previousSets && previousSets.length > 0) {
-                      const validSets = previousSets.filter(set => 
-                        set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0
+                    // Verifica se há séries válidas (com dados preenchidos)
+                    const validSets = previousSets?.filter(set => 
+                      (set.reps !== null && set.reps > 0) || (set.weight !== null && set.weight > 0)
+                    ) || [];
+                    
+                    // Verifica se há observações
+                    const hasObservations = previousObs && previousObs.trim().length > 0;
+                    
+                    console.log(`📊 Análise dos dados:`, {
+                      validSets,
+                      hasObservations,
+                      previousObs
+                    });
+                    
+                    // Se há séries válidas ou observações, mostra o resumo
+                    if (validSets.length > 0 || hasObservations) {
+                      return (
+                        <div>
+                          {validSets.length > 0 && (
+                            <p className="text-sm text-foreground mb-2">
+                              {validSets
+                                .map(set => {
+                                  const reps = set.reps || '-';
+                                  const weight = set.weight || '-';
+                                  return `${reps} reps x ${weight}kg`;
+                                })
+                                .join(" / ")}
+                            </p>
+                          )}
+                          {hasObservations && (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium">Observações:</span> {previousObs}
+                            </p>
+                          )}
+                        </div>
                       );
-                      
-                      console.log(`✅ Séries válidas encontradas:`, validSets);
-                      
-                      if (validSets.length > 0) {
-                        const setsText = validSets
-                          .map(set => `${set.reps} reps x ${set.weight}kg`)
-                          .join(" / ");
-                        
-                        return (
-                          <div>
-                            <p className="text-sm text-foreground mb-2">{setsText}</p>
-                            {previousObs && (
-                              <p className="text-sm text-muted-foreground">
-                                <span className="font-medium">Observações:</span> {previousObs}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      }
                     }
                     
                     console.log(`❌ Nenhum dado válido encontrado para ${exercise.name}`);
