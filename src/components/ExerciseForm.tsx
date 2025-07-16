@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -30,19 +29,9 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
     sets: 3,
     reps: '8-12',
     rpe: 8,
-    progressionType: 'Progressão Dupla',
     technique: '',
     techniqueDescription: ''
   });
-
-  const progressionTypes = [
-    'Progressão Dupla',
-    'Progressão Linear',
-    'Ondulação',
-    'Cluster',
-    'Rest-Pause',
-    'Drop Set'
-  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +44,7 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
       sets: formData.sets,
       reps: formData.reps,
       rpe: formData.rpe,
-      progressionType: formData.progressionType,
+      progressionType: 'Progressão Dupla', // Valor padrão fixo
       technique: formData.technique.trim() || undefined,
       techniqueDescription: formData.techniqueDescription.trim() || undefined
     };
@@ -68,7 +57,6 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
       sets: 3,
       reps: '8-12',
       rpe: 8,
-      progressionType: 'Progressão Dupla',
       technique: '',
       techniqueDescription: ''
     });
@@ -82,7 +70,6 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
       sets: 3,
       reps: '8-12',
       rpe: 8,
-      progressionType: 'Progressão Dupla',
       technique: '',
       techniqueDescription: ''
     });
@@ -153,7 +140,7 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
                   />
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <Label htmlFor="rpe">RPE (Esforço)</Label>
                   <Input
                     id="rpe"
@@ -163,25 +150,6 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
                     value={formData.rpe}
                     onChange={(e) => setFormData({ ...formData, rpe: parseInt(e.target.value) || 8 })}
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="progressionType">Tipo de Progressão</Label>
-                  <Select
-                    value={formData.progressionType}
-                    onValueChange={(value) => setFormData({ ...formData, progressionType: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {progressionTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="md:col-span-2">

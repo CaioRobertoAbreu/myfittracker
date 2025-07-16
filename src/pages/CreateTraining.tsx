@@ -121,7 +121,7 @@ export default function CreateTraining() {
         description: "Treino criado com sucesso"
       });
 
-      navigate(`/treinos/${planId}`);
+      navigate('/treinos');
     } catch (error) {
       console.error('Erro ao criar treino:', error);
       toast({
@@ -268,7 +268,7 @@ export default function CreateTraining() {
                         <div className="flex-1">
                           <div className="font-medium">{exercise.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            {exercise.sets} séries • {exercise.reps} reps • RPE {exercise.rpe} • {exercise.progressionType}
+                            {exercise.sets} séries • {exercise.reps} reps • RPE {exercise.rpe}
                             {exercise.technique && ` • ${exercise.technique}`}
                           </div>
                         </div>
