@@ -4,7 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,22 +12,32 @@ import { supabase } from "@/integrations/supabase/client";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [resetPassword, setResetPassword] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check URL parameters for password recovery
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+    
+    if (type === 'recovery') {
+      setResetPassword(true);
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Redirect authenticated users to home
-        if (session?.user) {
+        // Redirect authenticated users to home (only if not in recovery mode)
+        if (session?.user && !resetPassword) {
           navigate("/");
         }
       }
@@ -38,8 +48,8 @@ const Auth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Redirect if already authenticated
-      if (session?.user) {
+      // Redirect if already authenticated (but not during password recovery)
+      if (session?.user && !type) {
         navigate("/");
       }
     });
@@ -225,7 +235,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
       if (error) throw error;
@@ -239,6 +249,61 @@ const Auth = () => {
       toast({
         title: "Erro",
         description: "Erro ao enviar email de reset da senha",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!password || !confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Senha alterada com sucesso",
+      });
+      
+      // Redirect to home after successful password reset
+      window.location.href = '/';
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao alterar senha",
         variant: "destructive",
       });
     } finally {
@@ -260,7 +325,48 @@ const Auth = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {forgotPassword ? (
+          {resetPassword ? (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold">Nova Senha</h3>
+                <p className="text-sm text-muted-foreground">
+                  Digite sua nova senha
+                </p>
+              </div>
+              
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div>
+                  <Label htmlFor="new-password">Nova Senha</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Digite a senha novamente"
+                    required
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading}
+                >
+                  {loading ? "Alterando..." : "Alterar Senha"}
+                </Button>
+              </form>
+            </div>
+          ) : forgotPassword ? (
             <div className="space-y-4">
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Esqueci minha senha</h3>
