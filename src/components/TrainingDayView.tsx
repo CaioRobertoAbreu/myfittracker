@@ -144,7 +144,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     // Funcionalidade removida - não há mais dados da semana anterior
   };
 
-  const updateSet = async (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number | null) => {
+  const updateSet = async (exerciseId: string, setIndex: number, field: 'weight' | 'reps' | 'setNumber', value: number | null) => {
     const newData = {
       ...exerciseData,
       [exerciseId]: {
@@ -349,7 +349,17 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                     <div className="space-y-2">
                       {exerciseData[exercise.id]?.performedSets.map((set, setIndex) => (
                         <div key={setIndex} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                          <span className="text-sm font-medium w-16">Série {set.setNumber}</span>
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-muted-foreground">Série:</label>
+                            <Input
+                              type="number"
+                              value={set.setNumber || ""}
+                              onChange={(e) => updateSet(exercise.id, setIndex, 'setNumber', parseInt(e.target.value) || null)}
+                              className="w-16 h-8 text-sm text-center font-medium"
+                              placeholder="1"
+                              min="1"
+                            />
+                          </div>
                           <div className="flex items-center gap-2">
                             <label className="text-xs text-muted-foreground">Reps:</label>
                             <Input
