@@ -8,9 +8,18 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AuthGuard from "@/components/AuthGuard";
 
+interface Profile {
+  id: string;
+  user_id: string;
+  username: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const Index = () => {
   const [user, setUser] = React.useState<SupabaseUser | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
+  const [profile, setProfile] = React.useState<Profile | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -20,6 +29,10 @@ const Index = () => {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          loadProfile(session.user.id);
+        }
       }
     );
 
@@ -27,10 +40,32 @@ const Index = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        loadProfile(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const loadProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      setProfile(data);
+    } catch (error: any) {
+      console.error('Erro ao carregar perfil:', error);
+    }
+  };
 
   const cleanupAuthState = () => {
     localStorage.removeItem('supabase.auth.token');
@@ -83,7 +118,7 @@ const Index = () => {
               </p>
               {user && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  Bem-vindo, {user.email}
+                  Bem-vindo, {profile?.username || user.email}
                 </p>
               )}
             </div>
