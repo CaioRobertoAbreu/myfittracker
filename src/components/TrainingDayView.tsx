@@ -84,23 +84,34 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     async function loadPreviousWeekData() {
       if (weekNumber <= 1) return;
       
+      console.log(`🔍 Carregando dados da semana anterior (${weekNumber - 1}) para semana atual (${weekNumber})`);
+      
       const newPreviousData: {[key: string]: { sets: ExerciseSet[] | null; observations: string }} = {};
       
       for (const exercise of day.exercises) {
         try {
+          console.log(`📊 Buscando dados para exercício: ${exercise.name} (ID: ${exercise.id})`);
+          
           // Carregar dados da semana anterior
           const previousSets = await getExerciseSets(exercise.id, weekNumber - 1);
           const previousObservation = await getExerciseObservation(exercise.id, weekNumber - 1);
+          
+          console.log(`✅ Dados encontrados para ${exercise.name}:`, {
+            sets: previousSets,
+            observations: previousObservation.observations,
+            weekNumber: weekNumber - 1
+          });
           
           newPreviousData[exercise.id] = {
             sets: previousSets.length > 0 ? previousSets : null,
             observations: previousObservation.observations
           };
         } catch (error) {
-          console.error(`Erro ao carregar dados da semana anterior para ${exercise.id}:`, error);
+          console.error(`❌ Erro ao carregar dados da semana anterior para ${exercise.id}:`, error);
         }
       }
       
+      console.log(`🎯 Dados finais da semana anterior:`, newPreviousData);
       setPreviousWeekData(newPreviousData);
     }
 
@@ -378,10 +389,19 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                     const previousSets = getPreviousWeekData(exercise.id);
                     const previousObs = getPreviousObservation(exercise.id);
                     
+                    console.log(`🔎 Renderizando resumo para ${exercise.name}:`, {
+                      exerciseId: exercise.id,
+                      previousSets,
+                      previousObs,
+                      weekNumber
+                    });
+                    
                     if (previousSets && previousSets.length > 0) {
                       const validSets = previousSets.filter(set => 
                         set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0
                       );
+                      
+                      console.log(`✅ Séries válidas encontradas:`, validSets);
                       
                       if (validSets.length > 0) {
                         const setsText = validSets
@@ -401,6 +421,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                       }
                     }
                     
+                    console.log(`❌ Nenhum dado válido encontrado para ${exercise.name}`);
                     return (
                       <p className="text-sm text-muted-foreground italic">
                         Nenhum registro encontrado na semana anterior

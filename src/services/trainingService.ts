@@ -369,6 +369,8 @@ export async function saveExerciseSets(exerciseId: string, weekNumber: number, s
 // Buscar séries de um exercício
 export async function getExerciseSets(exerciseId: string, weekNumber: number): Promise<Array<{setNumber: number, weight: number | null, reps: number | null}>> {
   try {
+    console.log(`🔍 Buscando séries no banco:`, { exerciseId, weekNumber });
+    
     const { data, error } = await supabase
       .from('exercise_sets')
       .select('*')
@@ -376,13 +378,18 @@ export async function getExerciseSets(exerciseId: string, weekNumber: number): P
       .eq('week_number', weekNumber)
       .order('set_number');
 
+    console.log(`📊 Resultado da query exercise_sets:`, { data, error, exerciseId, weekNumber });
+
     if (error) throw error;
 
-    return data?.map(set => ({
+    const result = data?.map(set => ({
       setNumber: set.set_number,
       weight: set.weight,
       reps: set.reps
     })) || [];
+    
+    console.log(`✅ Séries processadas:`, result);
+    return result;
   } catch (error) {
     console.error('Erro ao buscar séries:', error);
     return [];
@@ -413,6 +420,8 @@ export async function saveExerciseObservation(exerciseId: string, weekNumber: nu
 // Buscar observação de um exercício
 export async function getExerciseObservation(exerciseId: string, weekNumber: number): Promise<{observations: string, isCompleted: boolean}> {
   try {
+    console.log(`🔍 Buscando observação no banco:`, { exerciseId, weekNumber });
+    
     const { data, error } = await supabase
       .from('exercise_observations')
       .select('*')
@@ -420,12 +429,17 @@ export async function getExerciseObservation(exerciseId: string, weekNumber: num
       .eq('week_number', weekNumber)
       .single();
 
+    console.log(`📝 Resultado da query exercise_observations:`, { data, error, exerciseId, weekNumber });
+
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
 
-    return {
+    const result = {
       observations: data?.observations || '',
       isCompleted: data?.is_completed || false
     };
+    
+    console.log(`✅ Observação processada:`, result);
+    return result;
   } catch (error) {
     console.error('Erro ao buscar observação:', error);
     return { observations: '', isCompleted: false };
