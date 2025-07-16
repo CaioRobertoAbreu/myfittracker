@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
 import { Diet } from "@/types/diet";
@@ -11,12 +12,14 @@ const ViewDiet = () => {
   const { dietId } = useParams<{ dietId: string }>();
   const [diet, setDiet] = useState<Diet | null>(null);
   const [loading, setLoading] = useState(true);
+  const [consumedFoods, setConsumedFoods] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (dietId) {
       loadDiet();
+      loadConsumedFoods();
     }
   }, [dietId]);
 
@@ -45,6 +48,31 @@ const ViewDiet = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadConsumedFoods = () => {
+    if (!dietId) return;
+    const stored = localStorage.getItem(`consumed-foods-${dietId}`);
+    if (stored) {
+      setConsumedFoods(new Set(JSON.parse(stored)));
+    }
+  };
+
+  const saveConsumedFoods = (foods: Set<string>) => {
+    if (dietId) {
+      localStorage.setItem(`consumed-foods-${dietId}`, JSON.stringify([...foods]));
+    }
+  };
+
+  const toggleFoodConsumption = (foodId: string) => {
+    const newConsumedFoods = new Set(consumedFoods);
+    if (newConsumedFoods.has(foodId)) {
+      newConsumedFoods.delete(foodId);
+    } else {
+      newConsumedFoods.add(foodId);
+    }
+    setConsumedFoods(newConsumedFoods);
+    saveConsumedFoods(newConsumedFoods);
   };
 
   if (loading) {
@@ -156,7 +184,8 @@ const ViewDiet = () => {
                   <div className="space-y-4">
                     {/* Lista de alimentos */}
                     <div className="space-y-2">
-                      <div className="grid grid-cols-6 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
+                      <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
+                        <span>Consumido</span>
                         <span>Alimento</span>
                         <span>Quantidade</span>
                         <span>Proteína (g)</span>
@@ -167,12 +196,29 @@ const ViewDiet = () => {
                       {meal.foods.map((food, foodIndex) => {
                         const totalProtein = food.proteinAnimal + food.proteinVegetable;
                         const calories = Math.round((totalProtein + food.carbs) * 4 + food.fat * 9);
+                        const isConsumed = consumedFoods.has(food.id);
                         
                         return (
-                          <div key={food.id} className="grid grid-cols-6 gap-2 text-sm py-2 border-b border-border/50">
-                            <span className="font-medium">{food.foodName}</span>
-                            <span>{food.quantity}</span>
-                            <span>
+                          <div 
+                            key={food.id} 
+                            className={`grid grid-cols-7 gap-2 text-sm py-2 border-b border-border/50 ${
+                              isConsumed ? 'bg-green-50 dark:bg-green-950/20' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-center">
+                              <Checkbox 
+                                checked={isConsumed}
+                                onCheckedChange={() => toggleFoodConsumption(food.id)}
+                                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                              />
+                            </div>
+                            <span className={`font-medium ${isConsumed ? 'line-through text-muted-foreground' : ''}`}>
+                              {food.foodName}
+                            </span>
+                            <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
+                              {food.quantity}
+                            </span>
+                            <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
                               {totalProtein.toFixed(1)}
                               {food.proteinAnimal > 0 && food.proteinVegetable > 0 && (
                                 <span className="text-xs text-muted-foreground ml-1">
@@ -180,9 +226,15 @@ const ViewDiet = () => {
                                 </span>
                               )}
                             </span>
-                            <span>{food.carbs.toFixed(1)}</span>
-                            <span>{food.fat.toFixed(1)}</span>
-                            <span className="font-medium">{calories}</span>
+                            <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
+                              {food.carbs.toFixed(1)}
+                            </span>
+                            <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
+                              {food.fat.toFixed(1)}
+                            </span>
+                            <span className={`font-medium ${isConsumed ? 'line-through text-muted-foreground' : ''}`}>
+                              {calories}
+                            </span>
                           </div>
                         );
                       })}
@@ -219,6 +271,21 @@ const ViewDiet = () => {
                               )
                             )} kcal
                           </span>
+                        </div>
+                      </div>
+                      
+                      {/* Progresso da refeição */}
+                      <div className="mt-3 pt-2 border-t">
+                        <div className="text-xs text-muted-foreground">
+                          Progresso: {meal.foods.filter(food => consumedFoods.has(food.id)).length} de {meal.foods.length} alimentos consumidos
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2 mt-1">
+                          <div 
+                            className="bg-green-600 h-2 rounded-full transition-all" 
+                            style={{ 
+                              width: `${meal.foods.length > 0 ? (meal.foods.filter(food => consumedFoods.has(food.id)).length / meal.foods.length) * 100 : 0}%` 
+                            }}
+                          ></div>
                         </div>
                       </div>
                     </div>
