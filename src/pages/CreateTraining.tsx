@@ -71,11 +71,14 @@ export default function CreateTraining() {
   };
 
   const addExerciseToDay = (dayId: string, exercise: Exercise) => {
-    setDays(days.map(day =>
+    console.log('🏋️ Adicionando exercício:', { dayId, exercise });
+    const updatedDays = days.map(day =>
       day.id === dayId
         ? { ...day, exercises: [...day.exercises, exercise] }
         : day
-    ));
+    );
+    console.log('📅 Estado atualizado dos dias:', updatedDays);
+    setDays(updatedDays);
   };
 
   const removeExerciseFromDay = (dayId: string, exerciseId: string) => {

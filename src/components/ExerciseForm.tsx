@@ -93,7 +93,7 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
       <CollapsibleContent>
         <Card className="mt-3">
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-semibold">Novo Exercício</h4>
                 <Button
@@ -184,15 +184,16 @@ export function ExerciseForm({ onAddExercise }: ExerciseFormProps) {
                   Cancelar
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   size="sm"
                   className="bg-primary hover:bg-primary/90"
+                  onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar
                 </Button>
               </div>
-            </form>
+            </div>
           </CardContent>
         </Card>
       </CollapsibleContent>
