@@ -33,21 +33,33 @@ export interface DatabaseExerciseObservation {
 // Inicializar dados mock no banco se não existirem
 export async function initializeMockData() {
   try {
+    console.log('Iniciando verificação de dados existentes...');
+    
     // Verificar se já existe um plano de treino
-    const { data: existingPlans } = await supabase
+    const { data: existingPlans, error: checkError } = await supabase
       .from('training_plans')
       .select('id')
       .limit(1);
 
+    console.log('Resultado da verificação:', { existingPlans, checkError });
+
+    if (checkError) {
+      console.error('Erro ao verificar planos existentes:', checkError);
+      throw checkError;
+    }
+
     if (existingPlans && existingPlans.length > 0) {
+      console.log('Plano existente encontrado:', existingPlans[0].id);
       return existingPlans[0].id; // Retorna o ID do plano existente
     }
+
+    console.log('Nenhum plano encontrado, criando novo...');
 
     // Criar plano de treino
     const { data: plan, error: planError } = await supabase
       .from('training_plans')
       .insert({
-        user_id: 'temp-user', // Será substituído quando implementarmos auth
+        user_id: crypto.randomUUID(), // Gerar UUID válido
         name: 'Programa de Hipertrofia - 8 Semanas',
         description: 'Programa focado em hipertrofia com progressão dupla',
         total_weeks: 8,
@@ -252,6 +264,8 @@ export async function initializeMockData() {
 // Buscar plano de treino
 export async function getTrainingPlan(): Promise<TrainingPlan | null> {
   try {
+    console.log('Buscando plano de treino...');
+    
     const { data: plans, error } = await supabase
       .from('training_plans')
       .select(`
@@ -266,8 +280,17 @@ export async function getTrainingPlan(): Promise<TrainingPlan | null> {
       `)
       .limit(1);
 
-    if (error) throw error;
-    if (!plans || plans.length === 0) return null;
+    console.log('Resultado da busca:', { plans, error });
+
+    if (error) {
+      console.error('Erro na query:', error);
+      throw error;
+    }
+    
+    if (!plans || plans.length === 0) {
+      console.log('Nenhum plano encontrado');
+      return null;
+    }
 
     const plan = plans[0];
     

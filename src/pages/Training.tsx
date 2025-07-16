@@ -287,15 +287,20 @@ export default function Training() {
   useEffect(() => {
     async function loadTrainingPlan() {
       try {
+        console.log('Iniciando carregamento do plano de treino...');
         let plan = await getTrainingPlan();
         
         if (!plan) {
+          console.log('Nenhum plano encontrado, inicializando dados mock...');
           // Se não houver plano, inicializar com dados mock
-          await initializeMockData();
+          const planId = await initializeMockData();
+          console.log('Dados mock inicializados, plano ID:', planId);
           plan = await getTrainingPlan();
+          console.log('Plano carregado após inicialização:', plan);
         }
         
         setTrainingPlan(plan);
+        console.log('Plano definido no estado:', plan);
       } catch (error) {
         console.error('Erro ao carregar plano de treino:', error);
       } finally {
