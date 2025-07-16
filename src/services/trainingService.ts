@@ -371,10 +371,23 @@ export async function getExerciseSets(exerciseId: string, weekNumber: number): P
   try {
     console.log(`🔍 Buscando séries no banco:`, { exerciseId, weekNumber });
     
+    // Primeiro busca o exercise_id baseado no id do exercício
+    const { data: exerciseData, error: exerciseError } = await supabase
+      .from('exercises')
+      .select('exercise_id')
+      .eq('id', exerciseId)
+      .single();
+    
+    if (exerciseError) throw exerciseError;
+    
+    // Agora busca séries baseado no exercise_id e semana
     const { data, error } = await supabase
       .from('exercise_sets')
-      .select('*')
-      .eq('exercise_id', exerciseId)
+      .select(`
+        *,
+        exercises!inner(exercise_id)
+      `)
+      .eq('exercises.exercise_id', exerciseData.exercise_id)
       .eq('week_number', weekNumber)
       .order('set_number');
 
@@ -422,10 +435,23 @@ export async function getExerciseObservation(exerciseId: string, weekNumber: num
   try {
     console.log(`🔍 Buscando observação no banco:`, { exerciseId, weekNumber });
     
+    // Primeiro busca o exercise_id baseado no id do exercício
+    const { data: exerciseData, error: exerciseError } = await supabase
+      .from('exercises')
+      .select('exercise_id')
+      .eq('id', exerciseId)
+      .single();
+    
+    if (exerciseError) throw exerciseError;
+    
+    // Agora busca observações baseado no exercise_id e semana
     const { data, error } = await supabase
       .from('exercise_observations')
-      .select('*')
-      .eq('exercise_id', exerciseId)
+      .select(`
+        *,
+        exercises!inner(exercise_id)
+      `)
+      .eq('exercises.exercise_id', exerciseData.exercise_id)
       .eq('week_number', weekNumber)
       .single();
 
