@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar, Dumbbell, Plus, Target } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { TrainingPlan } from "@/types/training";
 import { TrainingDayView } from "@/components/TrainingDayView";
 import { WeekProgress } from "@/components/WeekProgress";
@@ -278,6 +278,7 @@ const mockTrainingPlan: TrainingPlan = {
 
 export default function Training() {
   const navigate = useNavigate();
+  const { planId } = useParams();
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
@@ -348,7 +349,7 @@ export default function Training() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/treinos")}
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
