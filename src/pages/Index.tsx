@@ -37,15 +37,26 @@ const Index = () => {
               semanal e otimizar seus resultados com técnicas avançadas de progressão.
             </p>
             
-            {/* CTA Button */}
-            <Button
-              onClick={() => navigate("/treinos")}
-              size="lg"
-              className="text-lg px-8 py-4 gap-3 animate-scale-in hover:shadow-lg hover:shadow-training-primary/30 transition-all duration-300"
-            >
-              <Target className="h-5 w-5" />
-              Meus Treinos
-            </Button>
+            {/* CTA Buttons */}
+            <div className="flex gap-4 flex-col sm:flex-row justify-center">
+              <Button
+                onClick={() => navigate("/treinos")}
+                size="lg"
+                className="text-lg px-8 py-4 gap-3 animate-scale-in hover:shadow-lg hover:shadow-training-primary/30 transition-all duration-300"
+              >
+                <Target className="h-5 w-5" />
+                Meus Treinos
+              </Button>
+              <Button
+                onClick={() => navigate("/dietas")}
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-4 gap-3 animate-scale-in hover:shadow-lg hover:shadow-training-accent/30 transition-all duration-300"
+              >
+                <Calendar className="h-5 w-5" />
+                Minhas Dietas
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -148,15 +159,26 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-8">
             Acesse seus treinos e comece sua jornada de transformação hoje mesmo.
           </p>
-          <Button
-            onClick={() => navigate("/treinos")}
-            size="lg"
-            variant="outline"
-            className="text-lg px-8 py-4 gap-3 hover:bg-training-primary hover:text-primary-foreground transition-all duration-300"
-          >
-            <Dumbbell className="h-5 w-5" />
-            Começar Agora
-          </Button>
+          <div className="flex gap-4 flex-col sm:flex-row justify-center">
+            <Button
+              onClick={() => navigate("/treinos")}
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-4 gap-3 hover:bg-training-primary hover:text-primary-foreground transition-all duration-300"
+            >
+              <Dumbbell className="h-5 w-5" />
+              Meus Treinos
+            </Button>
+            <Button
+              onClick={() => navigate("/dietas")}
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-4 gap-3 hover:bg-training-accent hover:text-primary-foreground transition-all duration-300"
+            >
+              <Calendar className="h-5 w-5" />
+              Minhas Dietas
+            </Button>
+          </div>
         </div>
       </div>
     </div>

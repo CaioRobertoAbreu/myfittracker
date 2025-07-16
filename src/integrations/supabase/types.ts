@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      diet_meal_foods: {
+        Row: {
+          carbs: number | null
+          created_at: string
+          diet_meal_id: string
+          fat: number | null
+          food_name: string
+          id: string
+          protein_animal: number | null
+          protein_vegetable: number | null
+          quantity: string
+          updated_at: string
+        }
+        Insert: {
+          carbs?: number | null
+          created_at?: string
+          diet_meal_id: string
+          fat?: number | null
+          food_name: string
+          id?: string
+          protein_animal?: number | null
+          protein_vegetable?: number | null
+          quantity: string
+          updated_at?: string
+        }
+        Update: {
+          carbs?: number | null
+          created_at?: string
+          diet_meal_id?: string
+          fat?: number | null
+          food_name?: string
+          id?: string
+          protein_animal?: number | null
+          protein_vegetable?: number | null
+          quantity?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_meal_foods_diet_meal_id_fkey"
+            columns: ["diet_meal_id"]
+            isOneToOne: false
+            referencedRelation: "diet_meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diet_meals: {
+        Row: {
+          created_at: string
+          diet_id: string
+          id: string
+          name: string
+          order_number: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          diet_id: string
+          id?: string
+          name: string
+          order_number: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          diet_id?: string
+          id?: string
+          name?: string
+          order_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_meals_diet_id_fkey"
+            columns: ["diet_id"]
+            isOneToOne: false
+            referencedRelation: "diets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diets: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercise_observations: {
         Row: {
           created_at: string
