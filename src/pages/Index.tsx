@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Session } from '@supabase/supabase-js';
-import { Dumbbell, Apple, LogOut } from "lucide-react";
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { Dumbbell, Apple, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthGuard from "@/components/AuthGuard";
 
 const Index = () => {
-  const [user, setUser] = React.useState<User | null>(null);
+  const [user, setUser] = React.useState<SupabaseUser | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -87,14 +87,24 @@ const Index = () => {
                 </p>
               )}
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handleSignOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/perfil")}
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Perfil
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </div>
           
           <div className="grid gap-6 md:grid-cols-2">

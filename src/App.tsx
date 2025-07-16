@@ -13,6 +13,7 @@ import CreateDiet from "./pages/CreateDiet";
 import EditDiet from "./pages/EditDiet";
 import ViewDiet from "./pages/ViewDiet";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/perfil" element={<Profile />} />
           <Route path="/treinos" element={<TrainingList />} />
           <Route path="/treinos/novo" element={<CreateTraining />} />
           <Route path="/treinos/:planId/editar" element={<EditTraining />} />
