@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Target, Clock, Zap, FileText, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Target, Clock, Zap, FileText, Plus, Minus, Check, CheckCircle2 } from "lucide-react";
 import { TrainingDay, ExerciseSet } from "@/types/training";
 
 interface TrainingDayViewProps {
@@ -20,6 +20,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     observations: string;
     performedSets: ExerciseSet[];
     showObservations: boolean;
+    completed: boolean;
   }}>(
     Object.fromEntries(
       day.exercises.map(ex => [
@@ -31,7 +32,8 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
             weight: 0,
             reps: 0
           })),
-          showObservations: false
+          showObservations: false,
+          completed: false
         }
       ])
     )
@@ -88,6 +90,25 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
         showObservations: !prev[exerciseId].showObservations
       }
     }));
+  };
+
+  const toggleExerciseCompletion = (exerciseId: string) => {
+    setExerciseData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        completed: !prev[exerciseId].completed
+      }
+    }));
+  };
+
+  const formatPerformedSets = (sets: ExerciseSet[]) => {
+    const completedSets = sets.filter(set => set.reps > 0 && set.weight > 0);
+    if (completedSets.length === 0) return "Nenhuma série registrada";
+    
+    return completedSets
+      .map(set => `${set.reps} reps x ${set.weight} kg`)
+      .join(' / ');
   };
 
   const getPreviousObservation = (exerciseId: string) => {
@@ -183,7 +204,11 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
         {day.exercises.map((exercise, index) => (
           <Card 
             key={exercise.id} 
-            className="group transition-all duration-300 hover:shadow-lg hover:shadow-training-primary/20 hover:border-training-primary/50 cursor-pointer"
+            className={`group transition-all duration-300 hover:shadow-lg hover:shadow-training-primary/20 hover:border-training-primary/50 cursor-pointer ${
+              exerciseData[exercise.id]?.completed 
+                ? 'bg-training-success/5 border-training-success/50' 
+                : ''
+            }`}
             onClick={() => setSelectedExercise(
               selectedExercise === exercise.id ? null : exercise.id
             )}
@@ -191,12 +216,36 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="w-8 h-8 rounded-full flex items-center justify-center p-0">
-                    {index + 1}
+                  <Badge variant="secondary" className={`w-8 h-8 rounded-full flex items-center justify-center p-0 ${
+                    exerciseData[exercise.id]?.completed ? 'bg-training-success text-white' : ''
+                  }`}>
+                    {exerciseData[exercise.id]?.completed ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      index + 1
+                    )}
                   </Badge>
-                  <span className="text-lg">{exercise.name}</span>
+                  <span className={`text-lg ${exerciseData[exercise.id]?.completed ? 'line-through text-muted-foreground' : ''}`}>
+                    {exercise.name}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={exerciseData[exercise.id]?.completed ? "default" : "outline"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExerciseCompletion(exercise.id);
+                    }}
+                    className={`gap-1 ${
+                      exerciseData[exercise.id]?.completed 
+                        ? 'bg-training-success hover:bg-training-success/80 text-white' 
+                        : ''
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    {exerciseData[exercise.id]?.completed ? 'Concluído' : 'Marcar'}
+                  </Button>
                   <Badge variant="outline">
                     {exercise.sets}x{exercise.reps}@{exercise.rpe}
                   </Badge>
@@ -242,6 +291,19 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                   </div>
                 </div>
               </div>
+
+              {/* Performed Sets Summary */}
+              {(() => {
+                const performedSetsText = formatPerformedSets(exerciseData[exercise.id]?.performedSets || []);
+                const hasPerformedSets = performedSetsText !== "Nenhuma série registrada";
+                
+                return hasPerformedSets && (
+                  <div className="mt-3 p-2 bg-muted/30 rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Séries realizadas:</p>
+                    <p className="text-sm text-foreground">{performedSetsText}</p>
+                  </div>
+                );
+              })()}
 
               {/* Expanded Details */}
               {selectedExercise === exercise.id && (
