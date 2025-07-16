@@ -706,3 +706,270 @@ export async function deleteTrainingPlan(planId: string): Promise<void> {
     throw error;
   }
 }
+
+// Atualizar plano de treino existente
+export async function updateTrainingPlan(planId: string, planData: {
+  name: string;
+  description: string | null;
+  totalWeeks: number;
+  startDate: Date;
+  endDate: Date;
+  days: Array<{
+    id: string;
+    dayNumber: number;
+    name: string;
+    exercises: Array<{
+      id: string;
+      name: string;
+      sets: number;
+      reps: string;
+      rpe: number;
+      progressionType: string;
+      technique?: string;
+      techniqueDescription?: string;
+    }>;
+  }>;
+}): Promise<void> {
+  try {
+    // Atualizar informações básicas do plano
+    const { error: planError } = await supabase
+      .from('training_plans')
+      .update({
+        name: planData.name,
+        description: planData.description,
+        total_weeks: planData.totalWeeks,
+        start_date: planData.startDate.toISOString().split('T')[0],
+        end_date: planData.endDate.toISOString().split('T')[0]
+      })
+      .eq('id', planId);
+
+    if (planError) throw planError;
+
+    // Buscar semanas existentes
+    const { data: existingWeeks, error: weeksError } = await supabase
+      .from('training_weeks')
+      .select('id, week_number')
+      .eq('training_plan_id', planId)
+      .order('week_number');
+
+    if (weeksError) throw weeksError;
+
+    // Se o número de semanas mudou, ajustar
+    if (existingWeeks.length !== planData.totalWeeks) {
+      if (existingWeeks.length < planData.totalWeeks) {
+        // Adicionar semanas faltantes
+        const newWeeks = [];
+        for (let i = existingWeeks.length + 1; i <= planData.totalWeeks; i++) {
+          newWeeks.push({
+            training_plan_id: planId,
+            week_number: i,
+            is_deload: false
+          });
+        }
+        
+        const { error: newWeeksError } = await supabase
+          .from('training_weeks')
+          .insert(newWeeks);
+          
+        if (newWeeksError) throw newWeeksError;
+      } else {
+        // Remover semanas extras (começando da última)
+        const weeksToRemove = existingWeeks.slice(planData.totalWeeks);
+        const weekIdsToRemove = weeksToRemove.map(w => w.id);
+        
+        // Deletar dados associados às semanas que serão removidas
+        await deleteWeeksData(weekIdsToRemove);
+      }
+    }
+
+    // Atualizar estrutura de dias para a primeira semana (template)
+    // Buscar a primeira semana atualizada
+    const { data: firstWeek, error: firstWeekError } = await supabase
+      .from('training_weeks')
+      .select('id')
+      .eq('training_plan_id', planId)
+      .eq('week_number', 1)
+      .single();
+
+    if (firstWeekError) throw firstWeekError;
+
+    // Deletar dias e exercícios existentes da primeira semana
+    await deleteWeekData(firstWeek.id);
+
+    // Criar novos dias e exercícios para a primeira semana
+    const newDays = [];
+    for (const dayData of planData.days) {
+      newDays.push({
+        training_week_id: firstWeek.id,
+        day_number: dayData.dayNumber,
+        name: dayData.name
+      });
+    }
+
+    const { data: createdDays, error: daysError } = await supabase
+      .from('training_days')
+      .insert(newDays)
+      .select();
+
+    if (daysError) throw daysError;
+
+    // Criar exercícios para os novos dias
+    const newExercises = [];
+    for (let dayIndex = 0; dayIndex < planData.days.length; dayIndex++) {
+      const dayData = planData.days[dayIndex];
+      const createdDay = createdDays[dayIndex];
+
+      for (const exerciseData of dayData.exercises) {
+        newExercises.push({
+          training_day_id: createdDay.id,
+          exercise_id: exerciseData.id,
+          name: exerciseData.name,
+          sets: exerciseData.sets,
+          reps: exerciseData.reps,
+          rpe: exerciseData.rpe,
+          progression_type: exerciseData.progressionType,
+          technique: exerciseData.technique || null,
+          technique_description: exerciseData.techniqueDescription || null
+        });
+      }
+    }
+
+    if (newExercises.length > 0) {
+      const { error: exercisesError } = await supabase
+        .from('exercises')
+        .insert(newExercises);
+
+      if (exercisesError) throw exercisesError;
+    }
+
+    // Replicar a estrutura para todas as outras semanas
+    await replicateWeekStructure(planId, firstWeek.id, planData.totalWeeks);
+
+  } catch (error) {
+    console.error('Erro ao atualizar plano de treino:', error);
+    throw error;
+  }
+}
+
+// Função auxiliar para deletar dados de uma semana específica
+async function deleteWeekData(weekId: string) {
+  // Buscar dias da semana
+  const { data: days, error: daysError } = await supabase
+    .from('training_days')
+    .select('id')
+    .eq('training_week_id', weekId);
+
+  if (daysError) throw daysError;
+
+  if (days && days.length > 0) {
+    const dayIds = days.map(d => d.id);
+
+    // Buscar exercícios dos dias
+    const { data: exercises, error: exercisesError } = await supabase
+      .from('exercises')
+      .select('id')
+      .in('training_day_id', dayIds);
+
+    if (exercisesError) throw exercisesError;
+
+    if (exercises && exercises.length > 0) {
+      const exerciseIds = exercises.map(e => e.id);
+
+      // Deletar observações e séries
+      await supabase.from('exercise_observations').delete().in('exercise_id', exerciseIds);
+      await supabase.from('exercise_sets').delete().in('exercise_id', exerciseIds);
+      
+      // Deletar exercícios
+      await supabase.from('exercises').delete().in('training_day_id', dayIds);
+    }
+
+    // Deletar dias
+    await supabase.from('training_days').delete().eq('training_week_id', weekId);
+  }
+}
+
+// Função auxiliar para deletar dados de múltiplas semanas
+async function deleteWeeksData(weekIds: string[]) {
+  for (const weekId of weekIds) {
+    await deleteWeekData(weekId);
+  }
+  
+  // Deletar as semanas
+  await supabase.from('training_weeks').delete().in('id', weekIds);
+}
+
+// Função auxiliar para replicar estrutura da primeira semana para as outras
+async function replicateWeekStructure(planId: string, templateWeekId: string, totalWeeks: number) {
+  // Buscar estrutura da primeira semana
+  const { data: templateDays, error: templateError } = await supabase
+    .from('training_days')
+    .select(`
+      *,
+      exercises(*)
+    `)
+    .eq('training_week_id', templateWeekId);
+
+  if (templateError) throw templateError;
+
+  // Buscar todas as outras semanas
+  const { data: otherWeeks, error: otherWeeksError } = await supabase
+    .from('training_weeks')
+    .select('id')
+    .eq('training_plan_id', planId)
+    .neq('id', templateWeekId)
+    .order('week_number');
+
+  if (otherWeeksError) throw otherWeeksError;
+
+  // Replicar para cada semana
+  for (const week of otherWeeks) {
+    // Deletar estrutura existente
+    await deleteWeekData(week.id);
+
+    // Criar nova estrutura baseada no template
+    const newDays = [];
+    for (const templateDay of templateDays) {
+      newDays.push({
+        training_week_id: week.id,
+        day_number: templateDay.day_number,
+        name: templateDay.name
+      });
+    }
+
+    const { data: createdDays, error: daysError } = await supabase
+      .from('training_days')
+      .insert(newDays)
+      .select();
+
+    if (daysError) throw daysError;
+
+    // Criar exercícios
+    const newExercises = [];
+    for (let dayIndex = 0; dayIndex < templateDays.length; dayIndex++) {
+      const templateDay = templateDays[dayIndex];
+      const createdDay = createdDays[dayIndex];
+
+      for (const exercise of templateDay.exercises) {
+        newExercises.push({
+          training_day_id: createdDay.id,
+          exercise_id: exercise.exercise_id,
+          name: exercise.name,
+          sets: exercise.sets,
+          reps: exercise.reps,
+          rpe: exercise.rpe,
+          progression_type: exercise.progression_type,
+          technique: exercise.technique,
+          technique_description: exercise.technique_description
+        });
+      }
+    }
+
+    if (newExercises.length > 0) {
+      const { error: exercisesError } = await supabase
+        .from('exercises')
+        .insert(newExercises);
+
+      if (exercisesError) throw exercisesError;
+    }
+  }
+}

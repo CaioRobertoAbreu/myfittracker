@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Clock, Target, ArrowLeft, Plus, AlertTriangle, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { CalendarDays, Clock, Target, ArrowLeft, Plus, AlertTriangle, Trash2, CheckCircle, XCircle, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { updateTrainingExpiredStatus, deleteTrainingPlan } from '@/services/trainingService';
@@ -272,6 +272,18 @@ export default function TrainingList() {
                       )}
                     </Button>
                     
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/treinos/${plan.id}/editar`);
+                      }}
+                      className="flex items-center gap-1"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
@@ -292,13 +304,17 @@ export default function TrainingList() {
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                          <Button variant="outline">Cancelar</Button>
-                          <Button 
-                            variant="destructive"
-                            onClick={() => handleDeletePlan(plan.id)}
-                          >
-                            Excluir Treino
-                          </Button>
+                          <DialogTrigger asChild>
+                            <Button variant="outline">Cancelar</Button>
+                          </DialogTrigger>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="destructive"
+                              onClick={() => handleDeletePlan(plan.id)}
+                            >
+                              Excluir Treino
+                            </Button>
+                          </DialogTrigger>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
