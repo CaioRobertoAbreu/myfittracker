@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +37,37 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     )
   );
 
-  // Mock data para histórico das séries anteriores
-  const previousSessions = {
-    [day.exercises[0]?.id]: [
-      { week: weekNumber - 1, sets: [{ reps: 5, weight: 80 }, { reps: 4, weight: 80 }, { reps: 3, weight: 80 }] },
-      { week: weekNumber - 2, sets: [{ reps: 5, weight: 75 }, { reps: 5, weight: 75 }, { reps: 4, weight: 75 }] }
-    ]
+  // Carrega dados salvos do localStorage
+  useEffect(() => {
+    const savedData = localStorage.getItem(`training-${day.name}-week-${weekNumber}`);
+    if (savedData) {
+      try {
+        setExerciseData(JSON.parse(savedData));
+      } catch (error) {
+        console.error('Erro ao carregar dados salvos:', error);
+      }
+    }
+  }, [day.name, weekNumber]);
+
+  // Salva dados no localStorage quando exerciseData muda
+  useEffect(() => {
+    localStorage.setItem(`training-${day.name}-week-${weekNumber}`, JSON.stringify(exerciseData));
+  }, [exerciseData, day.name, weekNumber]);
+
+  // Carrega histórico apenas da semana anterior
+  const getPreviousWeekData = (exerciseId: string) => {
+    if (weekNumber <= 1) return null;
+    
+    const previousWeekData = localStorage.getItem(`training-${day.name}-week-${weekNumber - 1}`);
+    if (previousWeekData) {
+      try {
+        const data = JSON.parse(previousWeekData);
+        return data[exerciseId]?.performedSets || null;
+      } catch (error) {
+        return null;
+      }
+    }
+    return null;
   };
 
   const updateObservations = (exerciseId: string, value: string) => {
@@ -65,15 +90,32 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     }));
   };
 
-  const keepPreviousObservation = (exerciseId: string) => {
-    const previousObs = "Manter a técnica controlada, foco na amplitude completa"; // Mock data
-    setExerciseData(prev => ({
-      ...prev,
-      [exerciseId]: {
-        ...prev[exerciseId],
-        observations: previousObs
+  const getPreviousObservation = (exerciseId: string) => {
+    if (weekNumber <= 1) return "";
+    
+    const previousWeekData = localStorage.getItem(`training-${day.name}-week-${weekNumber - 1}`);
+    if (previousWeekData) {
+      try {
+        const data = JSON.parse(previousWeekData);
+        return data[exerciseId]?.observations || "";
+      } catch (error) {
+        return "";
       }
-    }));
+    }
+    return "";
+  };
+
+  const keepPreviousObservation = (exerciseId: string) => {
+    const previousObs = getPreviousObservation(exerciseId);
+    if (previousObs) {
+      setExerciseData(prev => ({
+        ...prev,
+        [exerciseId]: {
+          ...prev[exerciseId],
+          observations: previousObs
+        }
+      }));
+    }
   };
 
   const updateSet = (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number) => {
@@ -218,40 +260,44 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                     </div>
                   )}
 
-                  {/* Previous Sessions History */}
-                  {previousSessions[exercise.id] && (
-                    <div>
-                      <h4 className="font-semibold text-sm mb-3 text-training-accent">Histórico de Séries Anteriores</h4>
-                      <div className="space-y-3">
-                        {previousSessions[exercise.id].map((session, sessionIndex) => (
-                          <div key={sessionIndex} className="bg-muted/20 p-3 rounded-lg">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Semana {session.week}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                              {session.sets.map((prevSet, prevSetIndex) => (
-                                <div key={prevSetIndex} className="text-xs bg-background/50 p-2 rounded border">
-                                  <span className="font-medium">S{prevSetIndex + 1}:</span> {prevSet.reps} reps @ {prevSet.weight}kg
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                   {/* Previous Week History */}
+                   {(() => {
+                     const previousSets = getPreviousWeekData(exercise.id);
+                     return previousSets && (
+                       <div>
+                         <h4 className="font-semibold text-sm mb-3 text-training-accent">Semana Anterior</h4>
+                         <div className="bg-muted/20 p-3 rounded-lg">
+                           <div className="flex items-center gap-2 mb-2">
+                             <span className="text-xs font-medium text-muted-foreground">
+                               Semana {weekNumber - 1}
+                             </span>
+                           </div>
+                           <div className="grid grid-cols-3 gap-2">
+                             {previousSets.map((prevSet: any, prevSetIndex: number) => (
+                               <div key={prevSetIndex} className="text-xs bg-background/50 p-2 rounded border">
+                                 <span className="font-medium">S{prevSetIndex + 1}:</span> {prevSet.reps} reps @ {prevSet.weight}kg
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       </div>
+                     );
+                   })()}
 
-                  {/* Previous Observation */}
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Observação Anterior</h4>
-                    <div className="bg-muted/20 p-3 rounded-lg border-l-4 border-training-accent/50">
-                      <p className="text-xs text-muted-foreground italic">
-                        "Manter a técnica controlada, foco na amplitude completa. Aumentar peso na próxima semana."
-                      </p>
-                    </div>
-                  </div>
+                   {/* Previous Observation */}
+                   {(() => {
+                     const previousObs = getPreviousObservation(exercise.id);
+                     return previousObs && (
+                       <div>
+                         <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Observação Anterior</h4>
+                         <div className="bg-muted/20 p-3 rounded-lg border-l-4 border-training-accent/50">
+                           <p className="text-xs text-muted-foreground italic">
+                             "{previousObs}"
+                           </p>
+                         </div>
+                       </div>
+                     );
+                   })()}
 
                   {/* Sets Performance Tracking */}
                   <div>
@@ -336,33 +382,13 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                       </Button>
                     </div>
                     
-                    {!exerciseData[exercise.id]?.showObservations ? (
-                      <div 
-                        className="p-3 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-training-accent/50 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleObservations(exercise.id);
-                        }}
-                      >
-                        <p className="text-sm text-muted-foreground text-center">
-                          Clique para adicionar uma observação...
-                        </p>
-                      </div>
-                    ) : (
-                      <Textarea
-                        value={exerciseData[exercise.id]?.observations || ""}
-                        onChange={(e) => updateObservations(exercise.id, e.target.value)}
-                        placeholder="Digite suas observações sobre este exercício..."
-                        className="min-h-[80px] resize-none"
-                        onClick={(e) => e.stopPropagation()}
-                        onBlur={() => {
-                          if (!exerciseData[exercise.id]?.observations) {
-                            toggleObservations(exercise.id);
-                          }
-                        }}
-                        autoFocus
-                      />
-                    )}
+                     <Textarea
+                       value={exerciseData[exercise.id]?.observations || ""}
+                       onChange={(e) => updateObservations(exercise.id, e.target.value)}
+                       placeholder="Clique para adicionar uma observação se houver..."
+                       className="min-h-[80px] resize-none"
+                       onClick={(e) => e.stopPropagation()}
+                     />
                   </div>
 
                   {/* Week Progress Preview */}
