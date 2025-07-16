@@ -292,15 +292,34 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                 </div>
               </div>
 
-              {/* Performed Sets Summary */}
+              {/* Previous Week Summary */}
               {(() => {
-                const performedSetsText = formatPerformedSets(exerciseData[exercise.id]?.performedSets || []);
-                const hasPerformedSets = performedSetsText !== "Nenhuma série registrada";
+                const previousSets = getPreviousWeekData(exercise.id);
+                const previousObs = getPreviousObservation(exercise.id);
+                const hasPreviousData = previousSets || previousObs;
                 
-                return hasPerformedSets && (
-                  <div className="mt-3 p-2 bg-muted/30 rounded-lg">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Séries realizadas:</p>
-                    <p className="text-sm text-foreground">{performedSetsText}</p>
+                return hasPreviousData && (
+                  <div className="mt-3 p-3 bg-muted/30 rounded-lg border-l-4 border-training-accent/50">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Semana Anterior:</p>
+                    
+                    {previousSets && (
+                      <div className="mb-2">
+                        <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
+                        <p className="text-sm text-foreground">
+                          {previousSets
+                            .filter((set: any) => set.reps > 0 && set.weight > 0)
+                            .map((set: any, index: number) => `${set.reps} reps x ${set.weight} kg`)
+                            .join(' / ') || "Nenhuma série registrada"}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {previousObs && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Observação:</p>
+                        <p className="text-xs text-muted-foreground italic">"{previousObs}"</p>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
