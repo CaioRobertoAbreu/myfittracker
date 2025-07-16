@@ -45,58 +45,26 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     )
   );
 
-  const [previousWeekData, setPreviousWeekData] = useState<{[key: string]: {
-    sets: ExerciseSet[] | null;
-    observations: string;
-  }}>({});
 
-  // Carrega apenas dados da semana anterior (não preenche campos atuais)
-  useEffect(() => {
-    async function loadPreviousWeekData() {
-      if (weekNumber <= 1) return;
-      
-      const newPreviousData: {[key: string]: { sets: ExerciseSet[] | null; observations: string }} = {};
-      
-      for (const exercise of day.exercises) {
-        try {
-          // Carregar apenas dados da semana anterior para exibição
-          const previousSets = await getExerciseSets(exercise.id, weekNumber - 1);
-          const previousObservation = await getExerciseObservation(exercise.id, weekNumber - 1);
-          
-          newPreviousData[exercise.id] = {
-            sets: previousSets.length > 0 ? previousSets : null,
-            observations: previousObservation.observations
-          };
-          
-          console.log(`Dados da semana anterior para ${exercise.name}:`, {
-            sets: previousSets,
-            observations: previousObservation.observations
-          });
-        } catch (error) {
-          console.error(`Erro ao carregar dados da semana anterior para ${exercise.id}:`, error);
-        }
-      }
-      
-      setPreviousWeekData(newPreviousData);
-      console.log('Dados da semana anterior carregados:', newPreviousData);
-    }
-
-    loadPreviousWeekData();
-  }, [day.exercises, weekNumber]);
-
-  // Carrega dados salvos da semana atual (observações e status de conclusão)
+  // Carrega dados salvos da semana atual
   useEffect(() => {
     async function loadCurrentWeekData() {
       const newData = { ...exerciseData };
       
       for (const exercise of day.exercises) {
         try {
-          // Carregar apenas observações e status da semana atual (não as séries)
+          // Carregar séries da semana atual
+          const sets = await getExerciseSets(exercise.id, weekNumber);
+          if (sets.length > 0) {
+            newData[exercise.id].performedSets = sets;
+          }
+          
+          // Carregar observações e status da semana atual
           const observation = await getExerciseObservation(exercise.id, weekNumber);
           newData[exercise.id].observations = observation.observations;
           newData[exercise.id].completed = observation.isCompleted;
         } catch (error) {
-          console.error(`Erro ao carregar observações do exercício ${exercise.id}:`, error);
+          console.error(`Erro ao carregar dados do exercício ${exercise.id}:`, error);
         }
       }
       
@@ -105,15 +73,6 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
 
     loadCurrentWeekData();
   }, [day.exercises, weekNumber]);
-
-  // Helper para acessar dados da semana anterior
-  const getPreviousWeekData = (exerciseId: string) => {
-    return previousWeekData[exerciseId]?.sets || null;
-  };
-
-  const getPreviousObservation = (exerciseId: string) => {
-    return previousWeekData[exerciseId]?.observations || "";
-  };
 
   const updateObservations = async (exerciseId: string, value: string) => {
     setExerciseData(prev => ({
@@ -182,28 +141,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
 
 
   const keepPreviousObservation = async (exerciseId: string) => {
-    const previousObs = getPreviousObservation(exerciseId);
-    if (previousObs) {
-      setExerciseData(prev => ({
-        ...prev,
-        [exerciseId]: {
-          ...prev[exerciseId],
-          observations: previousObs
-        }
-      }));
-
-      // Salvar no Supabase
-      try {
-        await saveExerciseObservation(
-          exerciseId, 
-          weekNumber, 
-          previousObs, 
-          exerciseData[exerciseId]?.completed || false
-        );
-      } catch (error) {
-        console.error('Erro ao salvar observação:', error);
-      }
-    }
+    // Funcionalidade removida - não há mais dados da semana anterior
   };
 
   const updateSet = async (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number | null) => {
@@ -368,53 +306,6 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                 </div>
               </div>
 
-              {/* Previous Week Summary */}
-              {weekNumber > 1 && (
-                <div className="mt-3 p-3 bg-muted/30 rounded-lg border-l-4 border-training-accent/50">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Semana Anterior ({weekNumber - 1}):</p>
-                  
-                  {(() => {
-                    const previousSets = getPreviousWeekData(exercise.id);
-                     return previousSets && previousSets.length > 0 ? (
-                       <div className="mb-2">
-                         <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
-                         <div className="flex flex-wrap gap-1">
-                           {previousSets
-                             .filter(set => set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0)
-                             .map((set, idx) => (
-                               <span key={idx} className="text-xs bg-background/50 px-2 py-1 rounded border">
-                                 S{idx + 1}: {set.reps} × {set.weight}kg
-                               </span>
-                             ))}
-                           {previousSets.filter(set => set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0).length === 0 && (
-                             <span className="text-xs text-muted-foreground italic">Nenhuma série registrada</span>
-                           )}
-                         </div>
-                       </div>
-                    ) : (
-                      <div className="mb-2">
-                        <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
-                        <p className="text-sm text-muted-foreground italic">Nenhuma série registrada na semana anterior</p>
-                      </div>
-                    );
-                  })()}
-                  
-                  {(() => {
-                    const previousObs = getPreviousObservation(exercise.id);
-                    return previousObs ? (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Observação:</p>
-                        <p className="text-xs text-muted-foreground italic">"{previousObs}"</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Observação:</p>
-                        <p className="text-xs text-muted-foreground italic">Nenhuma observação na semana anterior</p>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
 
               {/* Expanded Details */}
               {selectedExercise === exercise.id && (
@@ -433,44 +324,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                     </div>
                   )}
 
-                   {/* Previous Week History */}
-                   {(() => {
-                     const previousSets = getPreviousWeekData(exercise.id);
-                     return previousSets && (
-                       <div>
-                         <h4 className="font-semibold text-sm mb-3 text-training-accent">Semana Anterior</h4>
-                         <div className="bg-muted/20 p-3 rounded-lg">
-                           <div className="flex items-center gap-2 mb-2">
-                             <span className="text-xs font-medium text-muted-foreground">
-                               Semana {weekNumber - 1}
-                             </span>
-                           </div>
-                           <div className="grid grid-cols-3 gap-2">
-                             {previousSets.map((prevSet, prevSetIndex) => (
-                               <div key={prevSetIndex} className="text-xs bg-background/50 p-2 rounded border">
-                                 <span className="font-medium">S{prevSetIndex + 1}:</span> {prevSet.reps} reps @ {prevSet.weight}kg
-                               </div>
-                             ))}
-                           </div>
-                         </div>
-                       </div>
-                     );
-                   })()}
 
-                   {/* Previous Observation */}
-                   {(() => {
-                     const previousObs = getPreviousObservation(exercise.id);
-                     return previousObs && (
-                       <div>
-                         <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Observação Anterior</h4>
-                         <div className="bg-muted/20 p-3 rounded-lg border-l-4 border-training-accent/50">
-                           <p className="text-xs text-muted-foreground italic">
-                             "{previousObs}"
-                           </p>
-                         </div>
-                       </div>
-                     );
-                   })()}
 
                   {/* Sets Performance Tracking */}
                   <div>
@@ -538,30 +392,17 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                   
                   {/* Observations */}
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm text-training-accent">
-                        Observações
-                      </h4>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          keepPreviousObservation(exercise.id);
-                        }}
-                        className="text-xs gap-1"
-                      >
-                        Manter observação anterior
-                      </Button>
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs text-muted-foreground">Observações:</label>
+                      </div>
+                      <Textarea
+                        value={exerciseData[exercise.id]?.observations || ""}
+                        onChange={(e) => updateObservations(exercise.id, e.target.value)}
+                        placeholder="Adicione suas observações sobre o exercício..."
+                        className="min-h-[80px] text-sm"
+                      />
                     </div>
-                    
-                     <Textarea
-                       value={exerciseData[exercise.id]?.observations || ""}
-                       onChange={(e) => updateObservations(exercise.id, e.target.value)}
-                       placeholder="Clique para adicionar uma observação se houver..."
-                       className="min-h-[80px] resize-none"
-                       onClick={(e) => e.stopPropagation()}
-                     />
                   </div>
 
                   {/* Week Progress Preview */}
