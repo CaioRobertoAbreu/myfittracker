@@ -282,6 +282,15 @@ const EditDiet = () => {
                       </p>
                     ) : (
                       <div className="space-y-3">
+                        <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground mb-2 px-3">
+                          <span>Alimento</span>
+                          <span>Quantidade</span>
+                          <span>Proteína (A) g</span>
+                          <span>Proteína (V) g</span>
+                          <span>Carboidratos g</span>
+                          <span>Gorduras g</span>
+                          <span></span>
+                        </div>
                         {meal.foods.map((food, foodIndex) => (
                           <div key={foodIndex} className="grid grid-cols-7 gap-2 items-center p-3 border rounded">
                             <Input
@@ -297,28 +306,28 @@ const EditDiet = () => {
                             <Input
                               type="number"
                               step="0.1"
-                              placeholder="Ptn (A)"
+                              placeholder="0"
                               value={food.proteinAnimal}
                               onChange={(e) => updateFood(mealIndex, foodIndex, "proteinAnimal", Number(e.target.value) || 0)}
                             />
                             <Input
                               type="number"
                               step="0.1"
-                              placeholder="Ptn (V)"
+                              placeholder="0"
                               value={food.proteinVegetable}
                               onChange={(e) => updateFood(mealIndex, foodIndex, "proteinVegetable", Number(e.target.value) || 0)}
                             />
                             <Input
                               type="number"
                               step="0.1"
-                              placeholder="Carb"
+                              placeholder="0"
                               value={food.carbs}
                               onChange={(e) => updateFood(mealIndex, foodIndex, "carbs", Number(e.target.value) || 0)}
                             />
                             <Input
                               type="number"
                               step="0.1"
-                              placeholder="Fat"
+                              placeholder="0"
                               value={food.fat}
                               onChange={(e) => updateFood(mealIndex, foodIndex, "fat", Number(e.target.value) || 0)}
                             />
@@ -332,6 +341,43 @@ const EditDiet = () => {
                             </Button>
                           </div>
                         ))}
+                        
+                        {/* Resumo nutricional da refeição */}
+                        {meal.foods.length > 0 && (
+                          <div className="mt-3 p-3 bg-muted/50 rounded border-t">
+                            <div className="text-sm font-medium mb-2">Resumo da Refeição:</div>
+                            <div className="grid grid-cols-4 gap-4 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">Proteína: </span>
+                                <span className="font-medium">
+                                  {(meal.foods.reduce((sum, food) => sum + food.proteinAnimal + food.proteinVegetable, 0)).toFixed(1)}g
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Carboidratos: </span>
+                                <span className="font-medium">
+                                  {(meal.foods.reduce((sum, food) => sum + food.carbs, 0)).toFixed(1)}g
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Gorduras: </span>
+                                <span className="font-medium">
+                                  {(meal.foods.reduce((sum, food) => sum + food.fat, 0)).toFixed(1)}g
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Calorias: </span>
+                                <span className="font-medium">
+                                  {Math.round(
+                                    meal.foods.reduce((sum, food) => 
+                                      sum + ((food.proteinAnimal + food.proteinVegetable + food.carbs) * 4) + (food.fat * 9), 0
+                                    )
+                                  )} kcal
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -339,6 +385,61 @@ const EditDiet = () => {
               ))}
             </CardContent>
           </Card>
+
+          {/* Resumo nutricional total */}
+          {meals.some(meal => meal.foods.length > 0) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumo Nutricional Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-primary/10 rounded">
+                    <div className="text-2xl font-bold text-primary">
+                      {Math.round(
+                        meals.reduce((mealSum, meal) =>
+                          mealSum + meal.foods.reduce((foodSum, food) =>
+                            foodSum + ((food.proteinAnimal + food.proteinVegetable + food.carbs) * 4) + (food.fat * 9), 0
+                          ), 0
+                        )
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Calorias</div>
+                  </div>
+                  <div className="text-center p-4 bg-secondary/10 rounded">
+                    <div className="text-2xl font-bold text-secondary">
+                      {(meals.reduce((mealSum, meal) =>
+                        mealSum + meal.foods.reduce((foodSum, food) =>
+                          foodSum + food.proteinAnimal + food.proteinVegetable, 0
+                        ), 0
+                      )).toFixed(1)}g
+                    </div>
+                    <div className="text-sm text-muted-foreground">Proteína</div>
+                  </div>
+                  <div className="text-center p-4 bg-accent/10 rounded">
+                    <div className="text-2xl font-bold text-accent">
+                      {(meals.reduce((mealSum, meal) =>
+                        mealSum + meal.foods.reduce((foodSum, food) =>
+                          foodSum + food.carbs, 0
+                        ), 0
+                      )).toFixed(1)}g
+                    </div>
+                    <div className="text-sm text-muted-foreground">Carboidratos</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/50 rounded">
+                    <div className="text-2xl font-bold">
+                      {(meals.reduce((mealSum, meal) =>
+                        mealSum + meal.foods.reduce((foodSum, food) =>
+                          foodSum + food.fat, 0
+                        ), 0
+                      )).toFixed(1)}g
+                    </div>
+                    <div className="text-sm text-muted-foreground">Gorduras</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex gap-4">
             <Button

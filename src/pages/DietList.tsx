@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowLeft, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -107,7 +107,16 @@ const DietList = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => navigate(`/dietas/${diet.id}`)}
+                          title="Visualizar dieta"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => navigate(`/dietas/${diet.id}/editar`)}
+                          title="Editar dieta"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
