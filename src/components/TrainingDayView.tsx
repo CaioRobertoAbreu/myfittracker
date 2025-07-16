@@ -360,16 +360,22 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                   
                   {(() => {
                     const previousSets = getPreviousWeekData(exercise.id);
-                    return previousSets && previousSets.length > 0 ? (
-                      <div className="mb-2">
-                        <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
-                        <p className="text-sm text-foreground">
-                          {previousSets
-                            .filter(set => set.reps > 0 && set.weight > 0)
-                            .map(set => `${set.reps} reps x ${set.weight} kg`)
-                            .join(' / ') || "Nenhuma série registrada"}
-                        </p>
-                      </div>
+                     return previousSets && previousSets.length > 0 ? (
+                       <div className="mb-2">
+                         <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
+                         <div className="flex flex-wrap gap-1">
+                           {previousSets
+                             .filter(set => set.reps > 0 && set.weight > 0)
+                             .map((set, idx) => (
+                               <span key={idx} className="text-xs bg-background/50 px-2 py-1 rounded border">
+                                 S{idx + 1}: {set.reps} × {set.weight}kg
+                               </span>
+                             ))}
+                           {previousSets.filter(set => set.reps > 0 && set.weight > 0).length === 0 && (
+                             <span className="text-xs text-muted-foreground italic">Nenhuma série registrada</span>
+                           )}
+                         </div>
+                       </div>
                     ) : (
                       <div className="mb-2">
                         <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
