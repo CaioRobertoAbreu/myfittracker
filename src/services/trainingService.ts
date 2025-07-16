@@ -55,11 +55,18 @@ export async function initializeMockData() {
 
     console.log('Nenhum plano encontrado, criando novo...');
 
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated to create training data');
+    }
+
     // Criar plano de treino
     const { data: plan, error: planError } = await supabase
       .from('training_plans')
       .insert({
-        user_id: crypto.randomUUID(), // Gerar UUID válido
+        user_id: user.id,
         name: 'Programa de Hipertrofia - 8 Semanas',
         description: 'Programa focado em hipertrofia com progressão dupla',
         total_weeks: 8,
@@ -464,11 +471,18 @@ export async function createTrainingPlan(planData: {
   }>;
 }): Promise<string> {
   try {
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated to create training plan');
+    }
+
     // Criar plano de treino
     const { data: plan, error: planError } = await supabase
       .from('training_plans')
       .insert({
-        user_id: crypto.randomUUID(), // Gerar UUID válido
+        user_id: user.id,
         name: planData.name,
         description: planData.description,
         total_weeks: planData.totalWeeks,

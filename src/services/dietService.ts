@@ -105,6 +105,13 @@ export const dietService = {
   },
 
   async createDiet(request: CreateDietRequest): Promise<Diet> {
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated to create a diet');
+    }
+
     // Create the diet
     const { data: diet, error: dietError } = await supabase
       .from("diets")
@@ -112,7 +119,7 @@ export const dietService = {
         name: request.name,
         description: request.description,
         start_date: request.startDate,
-        user_id: "00000000-0000-0000-0000-000000000000", // Mock user ID for now
+        user_id: user.id,
       })
       .select()
       .single();
