@@ -19,21 +19,31 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
   const [exerciseData, setExerciseData] = useState<{[key: string]: {
     observations: string;
     performedSets: ExerciseSet[];
+    showObservations: boolean;
   }}>(
     Object.fromEntries(
       day.exercises.map(ex => [
         ex.id, 
         {
-          observations: ex.observations || "",
+          observations: "",
           performedSets: Array.from({ length: ex.sets }, (_, i) => ({
             setNumber: i + 1,
             weight: 0,
             reps: 0
-          }))
+          })),
+          showObservations: false
         }
       ])
     )
   );
+
+  // Mock data para histórico das séries anteriores
+  const previousSessions = {
+    [day.exercises[0]?.id]: [
+      { week: weekNumber - 1, sets: [{ reps: 5, weight: 80 }, { reps: 4, weight: 80 }, { reps: 3, weight: 80 }] },
+      { week: weekNumber - 2, sets: [{ reps: 5, weight: 75 }, { reps: 5, weight: 75 }, { reps: 4, weight: 75 }] }
+    ]
+  };
 
   const updateObservations = (exerciseId: string, value: string) => {
     setExerciseData(prev => ({
@@ -41,6 +51,27 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
       [exerciseId]: {
         ...prev[exerciseId],
         observations: value
+      }
+    }));
+  };
+
+  const toggleObservations = (exerciseId: string) => {
+    setExerciseData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        showObservations: !prev[exerciseId].showObservations
+      }
+    }));
+  };
+
+  const keepPreviousObservation = (exerciseId: string) => {
+    const previousObs = "Manter a técnica controlada, foco na amplitude completa"; // Mock data
+    setExerciseData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        observations: previousObs
       }
     }));
   };
@@ -187,6 +218,41 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                     </div>
                   )}
 
+                  {/* Previous Sessions History */}
+                  {previousSessions[exercise.id] && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-3 text-training-accent">Histórico de Séries Anteriores</h4>
+                      <div className="space-y-3">
+                        {previousSessions[exercise.id].map((session, sessionIndex) => (
+                          <div key={sessionIndex} className="bg-muted/20 p-3 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                Semana {session.week}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              {session.sets.map((prevSet, prevSetIndex) => (
+                                <div key={prevSetIndex} className="text-xs bg-background/50 p-2 rounded border">
+                                  <span className="font-medium">S{prevSetIndex + 1}:</span> {prevSet.reps} reps @ {prevSet.weight}kg
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Previous Observation */}
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Observação Anterior</h4>
+                    <div className="bg-muted/20 p-3 rounded-lg border-l-4 border-training-accent/50">
+                      <p className="text-xs text-muted-foreground italic">
+                        "Manter a técnica controlada, foco na amplitude completa. Aumentar peso na próxima semana."
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Sets Performance Tracking */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
@@ -212,17 +278,6 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                         <div key={setIndex} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                           <span className="text-sm font-medium w-16">Série {set.setNumber}</span>
                           <div className="flex items-center gap-2">
-                            <label className="text-xs text-muted-foreground">Peso:</label>
-                            <Input
-                              type="number"
-                              value={set.weight || ""}
-                              onChange={(e) => updateSet(exercise.id, setIndex, 'weight', parseFloat(e.target.value) || 0)}
-                              className="w-20 h-8 text-sm"
-                              placeholder="kg"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
                             <label className="text-xs text-muted-foreground">Reps:</label>
                             <Input
                               type="number"
@@ -230,6 +285,17 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                               onChange={(e) => updateSet(exercise.id, setIndex, 'reps', parseInt(e.target.value) || 0)}
                               className="w-16 h-8 text-sm"
                               placeholder="0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-muted-foreground">Peso:</label>
+                            <Input
+                              type="number"
+                              value={set.weight || ""}
+                              onChange={(e) => updateSet(exercise.id, setIndex, 'weight', parseFloat(e.target.value) || 0)}
+                              className="w-20 h-8 text-sm"
+                              placeholder="kg"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
@@ -253,16 +319,50 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                   
                   {/* Observations */}
                   <div>
-                    <h4 className="font-semibold text-sm mb-2 text-training-accent">
-                      Observações
-                    </h4>
-                    <Textarea
-                      value={exerciseData[exercise.id]?.observations || ""}
-                      onChange={(e) => updateObservations(exercise.id, e.target.value)}
-                      placeholder="Adicione suas observações sobre este exercício..."
-                      className="min-h-[80px] resize-none"
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-training-accent">
+                        Observações
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          keepPreviousObservation(exercise.id);
+                        }}
+                        className="text-xs gap-1"
+                      >
+                        Manter observação anterior
+                      </Button>
+                    </div>
+                    
+                    {!exerciseData[exercise.id]?.showObservations ? (
+                      <div 
+                        className="p-3 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-training-accent/50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleObservations(exercise.id);
+                        }}
+                      >
+                        <p className="text-sm text-muted-foreground text-center">
+                          Clique para adicionar uma observação...
+                        </p>
+                      </div>
+                    ) : (
+                      <Textarea
+                        value={exerciseData[exercise.id]?.observations || ""}
+                        onChange={(e) => updateObservations(exercise.id, e.target.value)}
+                        placeholder="Digite suas observações sobre este exercício..."
+                        className="min-h-[80px] resize-none"
+                        onClick={(e) => e.stopPropagation()}
+                        onBlur={() => {
+                          if (!exerciseData[exercise.id]?.observations) {
+                            toggleObservations(exercise.id);
+                          }
+                        }}
+                        autoFocus
+                      />
+                    )}
                   </div>
 
                   {/* Week Progress Preview */}
