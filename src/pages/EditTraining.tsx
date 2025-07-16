@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Save, Calendar, Target, Dumbbell, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, Target, Dumbbell, Plus, Trash2, Edit, MoveUp, MoveDown } from 'lucide-react';
 import { ExerciseForm } from '@/components/ExerciseForm';
 import { getTrainingPlan, updateTrainingPlan } from '@/services/trainingService';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +36,7 @@ export default function EditTraining() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<{dayId: string, exerciseId: string} | null>(null);
 
   // Form state
   const [name, setName] = useState('');
@@ -150,6 +151,49 @@ export default function EditTraining() {
         ? { ...day, exercises: day.exercises.filter(ex => ex.id !== exerciseId) }
         : day
     ));
+  };
+
+  const updateExercise = (dayId: string, exerciseId: string, updatedExercise: Exercise) => {
+    setDays(days.map(day =>
+      day.id === dayId
+        ? { 
+            ...day, 
+            exercises: day.exercises.map(ex => 
+              ex.id === exerciseId ? updatedExercise : ex
+            ) 
+          }
+        : day
+    ));
+    setEditingExercise(null);
+  };
+
+  const moveExerciseUp = (dayId: string, exerciseIndex: number) => {
+    if (exerciseIndex === 0) return;
+    
+    setDays(days.map(day => {
+      if (day.id === dayId) {
+        const newExercises = [...day.exercises];
+        [newExercises[exerciseIndex - 1], newExercises[exerciseIndex]] = 
+        [newExercises[exerciseIndex], newExercises[exerciseIndex - 1]];
+        return { ...day, exercises: newExercises };
+      }
+      return day;
+    }));
+  };
+
+  const moveExerciseDown = (dayId: string, exerciseIndex: number) => {
+    const day = days.find(d => d.id === dayId);
+    if (!day || exerciseIndex === day.exercises.length - 1) return;
+    
+    setDays(days.map(d => {
+      if (d.id === dayId) {
+        const newExercises = [...d.exercises];
+        [newExercises[exerciseIndex], newExercises[exerciseIndex + 1]] = 
+        [newExercises[exerciseIndex + 1], newExercises[exerciseIndex]];
+        return { ...d, exercises: newExercises };
+      }
+      return d;
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -366,33 +410,84 @@ export default function EditTraining() {
 
                   {/* Exercises for this day */}
                   <div className="ml-4 space-y-3">
-                    {day.exercises.map((exercise) => (
-                      <div
-                        key={exercise.id}
-                        className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                      >
-                        <div className="flex-1">
-                          <div className="font-medium">{exercise.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {exercise.sets} séries • {exercise.reps} reps • RPE {exercise.rpe}
-                            {exercise.technique && ` • ${exercise.technique}`}
+                    {day.exercises.map((exercise, exerciseIndex) => (
+                      <div key={exercise.id}>
+                        {editingExercise?.dayId === day.id && editingExercise?.exerciseId === exercise.id ? (
+                          <ExerciseForm
+                            initialExercise={exercise}
+                            onAddExercise={(updatedExercise) => updateExercise(day.id, exercise.id, updatedExercise)}
+                            onCancel={() => setEditingExercise(null)}
+                            isEditing={true}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                            <div className="flex-1">
+                              <div className="font-medium">{exercise.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {exercise.sets} séries • {exercise.reps} reps • RPE {exercise.rpe}
+                                {exercise.technique && ` • ${exercise.technique}`}
+                              </div>
+                              {exercise.techniqueDescription && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {exercise.techniqueDescription}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {/* Move Up/Down buttons */}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveExerciseUp(day.id, exerciseIndex)}
+                                disabled={exerciseIndex === 0}
+                                className="p-1 h-8 w-8"
+                              >
+                                <MoveUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveExerciseDown(day.id, exerciseIndex)}
+                                disabled={exerciseIndex === day.exercises.length - 1}
+                                className="p-1 h-8 w-8"
+                              >
+                                <MoveDown className="h-4 w-4" />
+                              </Button>
+                              
+                              {/* Edit button */}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingExercise({dayId: day.id, exerciseId: exercise.id})}
+                                className="p-1 h-8 w-8"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              
+                              {/* Remove button */}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeExerciseFromDay(day.id, exercise.id)}
+                                className="text-destructive hover:text-destructive p-1 h-8 w-8"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeExerciseFromDay(day.id, exercise.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        )}
                       </div>
                     ))}
                     
-                    <ExerciseForm
-                      onAddExercise={(exercise) => addExerciseToDay(day.id, exercise)}
-                    />
+                    {!editingExercise && (
+                      <ExerciseForm
+                        onAddExercise={(exercise) => addExerciseToDay(day.id, exercise)}
+                      />
+                    )}
                   </div>
 
                   {dayIndex < days.length - 1 && <Separator />}
