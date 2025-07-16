@@ -18,263 +18,261 @@ const mockTrainingPlan: TrainingPlan = {
   currentWeek: 1,
   createdAt: new Date(),
   updatedAt: new Date(),
-  weeks: [
-    {
-      id: "week-1",
-      weekNumber: 1,
-      isDeload: false,
-      days: [
-        {
-          id: "day-1-1",
-          dayNumber: 1,
-          name: "Dia 1 - Pernas",
-          exercises: [
-            {
-              id: "ex-1",
-              name: "Agachamento (com pausa de 2 segundos)",
-              sets: 3,
-              reps: "3-5",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Progressão Dupla",
-              techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Pausa de 2 segundos na posição inferior.",
-              observations: "Manter a coluna neutra durante todo o movimento"
-            },
-            {
-              id: "ex-2",
-              name: "RDL (com pausa de 2 segundos)",
-              sets: 3,
-              reps: "3-5",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Romanian Deadlift com pausa",
-              techniqueDescription: "Desça até sentir alongamento nos posteriores, pause 2 segundos e retorne",
-              observations: "Manter joelhos levemente flexionados"
-            },
-            {
-              id: "ex-3",
-              name: "Pull Through",
-              sets: 3,
-              reps: "6-8",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Movimento de quadril",
-              techniqueDescription: "Movimento iniciado pelo quadril, contraindo glúteos no final",
-              observations: "Foco na ativação dos glúteos"
-            },
-            {
-              id: "ex-4",
-              name: "Gemeos Leg Press (pausa de 2 segundos)",
-              sets: 4,
-              reps: "6-8",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Contração mantida",
-              techniqueDescription: "Subir na ponta dos pés, pausar 2 segundos no topo",
-              observations: "Amplitude completa de movimento"
-            }
-          ]
-        },
-        {
-          id: "day-1-2",
-          dayNumber: 2,
-          name: "Dia 2 - Empurrar",
-          exercises: [
-            {
-              id: "ex-5",
-              name: "Supino Halter (com pausa de 2 segundos)",
-              sets: 3,
-              reps: "3-5",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Pausa no peito",
-              techniqueDescription: "Desça os halteres até o peito, pause 2 segundos e empurre",
-              observations: "Manter escápulas retraídas"
-            },
-            {
-              id: "ex-6",
-              name: "Remada na Máquina",
-              sets: 3,
-              reps: "4-6",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Puxada controlada",
-              techniqueDescription: "Puxar até o peito, contrair as escápulas",
-              observations: "Evitar balanço do tronco"
-            },
-            {
-              id: "ex-7",
-              name: "Desenvolvimento Halter Unilateral em Pé (com pausa de 2 segundos)",
-              sets: 2,
-              reps: "5-7",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Unilateral com pausa",
-              techniqueDescription: "Empurrar halter acima da cabeça, pausar 2 segundos no topo",
-              observations: "Manter core contraído para estabilidade"
-            },
-            {
-              id: "ex-8",
-              name: "Puxador Aberto",
-              sets: 2,
-              reps: "6-8",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Pegada aberta",
-              techniqueDescription: "Puxar com pegada mais aberta que os ombros",
-              observations: "Foco na contração dos dorsais"
-            },
-            {
-              id: "ex-9",
-              name: "Elevação Lateral com Halter",
-              sets: 2,
-              reps: "10-15",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Movimento lateral",
-              techniqueDescription: "Elevar os braços lateralmente até a altura dos ombros",
-              observations: "Controlar a descida do movimento"
-            }
-          ]
-        },
-        {
-          id: "day-1-4",
-          dayNumber: 4,
-          name: "Dia 4 - Pernas (Volume)",
-          exercises: [
-            {
-              id: "ex-10",
-              name: "Elevação de Quadril Guiado",
-              sets: 3,
-              reps: "6-8",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Hip Thrust",
-              techniqueDescription: "Elevar o quadril contraindo os glúteos",
-              observations: "Pausa de 1 segundo no topo"
-            },
-            {
-              id: "ex-11",
-              name: "Agachamento Frontal com Halter (com pausa de 5 segundos)",
-              sets: 3,
-              reps: "6-8",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Front Squat com pausa longa",
-              techniqueDescription: "Agachamento com halter na frente, pausa de 5 segundos embaixo",
-              observations: "Manter o tronco ereto durante toda a pausa"
-            },
-            {
-              id: "ex-12",
-              name: "Cadeira Extensora",
-              sets: 3,
-              reps: "8-12",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Extensão controlada",
-              techniqueDescription: "Estender as pernas controladamente",
-              observations: "Pausa de 1 segundo no topo"
-            },
-            {
-              id: "ex-13",
-              name: "Cadeira Flexora",
-              sets: 3,
-              reps: "8-12",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Flexão controlada",
-              techniqueDescription: "Flexionar as pernas até o máximo",
-              observations: "Controlar a fase excêntrica"
-            },
-            {
-              id: "ex-14",
-              name: "Gemeos Leg Press (pausa de 2 segundos)",
-              sets: 4,
-              reps: "10-15",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Contração mantida",
-              techniqueDescription: "Subir na ponta dos pés, pausar 2 segundos no topo",
-              observations: "Volume maior que o Dia 1"
-            }
-          ]
-        },
-        {
-          id: "day-1-5",
-          dayNumber: 5,
-          name: "Dia 5 - Push/Pull (Volume)",
-          exercises: [
-            {
-              id: "ex-15",
-              name: "Supino Halter (com pausa de 2 segundos)",
-              sets: 3,
-              reps: "6-10",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Pausa no peito",
-              techniqueDescription: "Versão com maior volume que o Dia 2",
-              observations: "Foco na contração máxima"
-            },
-            {
-              id: "ex-16",
-              name: "Remada na Polia",
-              sets: 3,
-              reps: "6-10",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Puxada na polia",
-              techniqueDescription: "Puxar a polia até o abdome",
-              observations: "Manter postura ereta"
-            },
-            {
-              id: "ex-17",
-              name: "Desenvolvimento Halter Unilateral em Pé (com pausa de 2 segundos)",
-              sets: 2,
-              reps: "8-12",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Unilateral com pausa",
-              techniqueDescription: "Versão com maior volume",
-              observations: "Alternar braços a cada série"
-            },
-            {
-              id: "ex-18",
-              name: "Puxador Diagonal na Polia",
-              sets: 2,
-              reps: "8-12",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Puxada diagonal",
-              techniqueDescription: "Puxar em ângulo diagonal",
-              observations: "Variar ângulo de puxada"
-            },
-            {
-              id: "ex-19",
-              name: "Triceps Francês Unilateral na Polia",
-              sets: 2,
-              reps: "8-12",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Francês unilateral",
-              techniqueDescription: "Extensão de tríceps com um braço",
-              observations: "Manter cotovelo fixo"
-            },
-            {
-              id: "ex-20",
-              name: "Rosca Martelo na Polia",
-              sets: 2,
-              reps: "8-12",
-              rpe: 8,
-              progressionType: "Progressão Dupla",
-              technique: "Rosca martelo",
-              techniqueDescription: "Flexão de bíceps com pegada neutra",
-              observations: "Controlar a descida"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  weeks: Array.from({ length: 8 }, (_, weekIndex) => ({
+    id: `week-${weekIndex + 1}`,
+    weekNumber: weekIndex + 1,
+    isDeload: weekIndex + 1 === 4 || weekIndex + 1 === 8,
+    days: [
+      {
+        id: `day-${weekIndex + 1}-1`,
+        dayNumber: 1,
+        name: "Dia 1 - Pernas",
+        exercises: [
+          {
+            id: `ex-${weekIndex + 1}-1`,
+            name: "Agachamento (com pausa de 2 segundos)",
+            sets: 3,
+            reps: "3-5",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Pausa de 2 segundos na posição inferior.",
+            observations: "Manter a coluna neutra durante todo o movimento"
+          },
+          {
+            id: `ex-${weekIndex + 1}-2`,
+            name: "RDL (com pausa de 2 segundos)",
+            sets: 3,
+            reps: "3-5",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Desça até sentir alongamento nos posteriores, pause 2 segundos e retorne.",
+            observations: "Manter joelhos levemente flexionados"
+          },
+          {
+            id: `ex-${weekIndex + 1}-3`,
+            name: "Pull Through",
+            sets: 3,
+            reps: "6-8",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Movimento iniciado pelo quadril, contraindo glúteos no final.",
+            observations: "Foco na ativação dos glúteos"
+          },
+          {
+            id: `ex-${weekIndex + 1}-4`,
+            name: "Gemeos Leg Press (pausa de 2 segundos)",
+            sets: 4,
+            reps: "6-8",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Subir na ponta dos pés, pausar 2 segundos no topo.",
+            observations: "Amplitude completa de movimento"
+          }
+        ]
+      },
+      {
+        id: `day-${weekIndex + 1}-2`,
+        dayNumber: 2,
+        name: "Dia 2 - Empurrar",
+        exercises: [
+          {
+            id: `ex-${weekIndex + 1}-5`,
+            name: "Supino Halter (com pausa de 2 segundos)",
+            sets: 3,
+            reps: "3-5",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Desça os halteres até o peito, pause 2 segundos e empurre.",
+            observations: "Manter escápulas retraídas"
+          },
+          {
+            id: `ex-${weekIndex + 1}-6`,
+            name: "Remada na Máquina",
+            sets: 3,
+            reps: "4-6",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Puxar até o peito, contrair as escápulas.",
+            observations: "Evitar balanço do tronco"
+          },
+          {
+            id: `ex-${weekIndex + 1}-7`,
+            name: "Desenvolvimento Halter Unilateral em Pé (com pausa de 2 segundos)",
+            sets: 2,
+            reps: "5-7",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Empurrar halter acima da cabeça, pausar 2 segundos no topo.",
+            observations: "Manter core contraído para estabilidade"
+          },
+          {
+            id: `ex-${weekIndex + 1}-8`,
+            name: "Puxador Aberto",
+            sets: 2,
+            reps: "6-8",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Puxar com pegada mais aberta que os ombros.",
+            observations: "Foco na contração dos dorsais"
+          },
+          {
+            id: `ex-${weekIndex + 1}-9`,
+            name: "Elevação Lateral com Halter",
+            sets: 2,
+            reps: "10-15",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Elevar os braços lateralmente até a altura dos ombros.",
+            observations: "Controlar a descida do movimento"
+          }
+        ]
+      },
+      {
+        id: `day-${weekIndex + 1}-4`,
+        dayNumber: 4,
+        name: "Dia 4 - Pernas (Volume)",
+        exercises: [
+          {
+            id: `ex-${weekIndex + 1}-10`,
+            name: "Elevação de Quadril Guiado",
+            sets: 3,
+            reps: "6-8",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Elevar o quadril contraindo os glúteos.",
+            observations: "Pausa de 1 segundo no topo"
+          },
+          {
+            id: `ex-${weekIndex + 1}-11`,
+            name: "Agachamento Frontal com Halter (com pausa de 5 segundos)",
+            sets: 3,
+            reps: "6-8",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Agachamento com halter na frente, pausa de 5 segundos embaixo.",
+            observations: "Manter o tronco ereto durante toda a pausa"
+          },
+          {
+            id: `ex-${weekIndex + 1}-12`,
+            name: "Cadeira Extensora",
+            sets: 3,
+            reps: "8-12",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Estender as pernas controladamente.",
+            observations: "Pausa de 1 segundo no topo"
+          },
+          {
+            id: `ex-${weekIndex + 1}-13`,
+            name: "Cadeira Flexora",
+            sets: 3,
+            reps: "8-12",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Flexionar as pernas até o máximo.",
+            observations: "Controlar a fase excêntrica"
+          },
+          {
+            id: `ex-${weekIndex + 1}-14`,
+            name: "Gemeos Leg Press (pausa de 2 segundos)",
+            sets: 4,
+            reps: "10-15",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Subir na ponta dos pés, pausar 2 segundos no topo.",
+            observations: "Volume maior que o Dia 1"
+          }
+        ]
+      },
+      {
+        id: `day-${weekIndex + 1}-5`,
+        dayNumber: 5,
+        name: "Dia 5 - Push/Pull (Volume)",
+        exercises: [
+          {
+            id: `ex-${weekIndex + 1}-15`,
+            name: "Supino Halter (com pausa de 2 segundos)",
+            sets: 3,
+            reps: "6-10",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Versão com maior volume que o Dia 2.",
+            observations: "Foco na contração máxima"
+          },
+          {
+            id: `ex-${weekIndex + 1}-16`,
+            name: "Remada na Polia",
+            sets: 3,
+            reps: "6-10",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Puxar a polia até o abdome.",
+            observations: "Manter postura ereta"
+          },
+          {
+            id: `ex-${weekIndex + 1}-17`,
+            name: "Desenvolvimento Halter Unilateral em Pé (com pausa de 2 segundos)",
+            sets: 2,
+            reps: "8-12",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Versão com maior volume.",
+            observations: "Alternar braços a cada série"
+          },
+          {
+            id: `ex-${weekIndex + 1}-18`,
+            name: "Puxador Diagonal na Polia",
+            sets: 2,
+            reps: "8-12",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Puxar em ângulo diagonal.",
+            observations: "Variar ângulo de puxada"
+          },
+          {
+            id: `ex-${weekIndex + 1}-19`,
+            name: "Triceps Francês Unilateral na Polia",
+            sets: 2,
+            reps: "8-12",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Extensão de tríceps com um braço.",
+            observations: "Manter cotovelo fixo"
+          },
+          {
+            id: `ex-${weekIndex + 1}-20`,
+            name: "Rosca Martelo na Polia",
+            sets: 2,
+            reps: "8-12",
+            rpe: 8,
+            progressionType: "Progressão Dupla",
+            technique: "Progressão Dupla",
+            techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Flexão de bíceps com pegada neutra.",
+            observations: "Controlar a descida"
+          }
+        ]
+      }
+    ]
+  }))
 };
 
 export default function Training() {
@@ -348,7 +346,19 @@ export default function Training() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6">
+                {/* Deload Week Alert */}
+                {currentWeek?.isDeload && (
+                  <div className="mb-4 p-4 bg-training-warning/10 border border-training-warning/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-training-warning rounded-full"></div>
+                      <h3 className="font-semibold text-training-warning">Semana de Deload</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Esta é uma semana de recuperação. Reduza a intensidade e foque na técnica.
+                    </p>
+                  </div>
+                )}
                 {activeDays.map((day) => (
                   <Card
                     key={day.id}
