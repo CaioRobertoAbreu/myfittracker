@@ -50,45 +50,60 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     observations: string;
   }}>({});
 
-  // Carrega dados salvos do Supabase
+  // Carrega apenas dados da semana anterior (não preenche campos atuais)
   useEffect(() => {
-    async function loadExerciseData() {
-      const newData = { ...exerciseData };
+    async function loadPreviousWeekData() {
+      if (weekNumber <= 1) return;
+      
       const newPreviousData: {[key: string]: { sets: ExerciseSet[] | null; observations: string }} = {};
       
       for (const exercise of day.exercises) {
         try {
-          // Carregar séries da semana atual
-          const sets = await getExerciseSets(exercise.id, weekNumber);
-          if (sets.length > 0) {
-            newData[exercise.id].performedSets = sets;
-          }
+          // Carregar apenas dados da semana anterior para exibição
+          const previousSets = await getExerciseSets(exercise.id, weekNumber - 1);
+          const previousObservation = await getExerciseObservation(exercise.id, weekNumber - 1);
           
-          // Carregar observações e status da semana atual
+          newPreviousData[exercise.id] = {
+            sets: previousSets.length > 0 ? previousSets : null,
+            observations: previousObservation.observations
+          };
+          
+          console.log(`Dados da semana anterior para ${exercise.name}:`, {
+            sets: previousSets,
+            observations: previousObservation.observations
+          });
+        } catch (error) {
+          console.error(`Erro ao carregar dados da semana anterior para ${exercise.id}:`, error);
+        }
+      }
+      
+      setPreviousWeekData(newPreviousData);
+      console.log('Dados da semana anterior carregados:', newPreviousData);
+    }
+
+    loadPreviousWeekData();
+  }, [day.exercises, weekNumber]);
+
+  // Carrega dados salvos da semana atual (observações e status de conclusão)
+  useEffect(() => {
+    async function loadCurrentWeekData() {
+      const newData = { ...exerciseData };
+      
+      for (const exercise of day.exercises) {
+        try {
+          // Carregar apenas observações e status da semana atual (não as séries)
           const observation = await getExerciseObservation(exercise.id, weekNumber);
           newData[exercise.id].observations = observation.observations;
           newData[exercise.id].completed = observation.isCompleted;
-
-          // Carregar dados da semana anterior
-          if (weekNumber > 1) {
-            const previousSets = await getExerciseSets(exercise.id, weekNumber - 1);
-            const previousObservation = await getExerciseObservation(exercise.id, weekNumber - 1);
-            
-            newPreviousData[exercise.id] = {
-              sets: previousSets.length > 0 ? previousSets : null,
-              observations: previousObservation.observations
-            };
-          }
         } catch (error) {
-          console.error(`Erro ao carregar dados do exercício ${exercise.id}:`, error);
+          console.error(`Erro ao carregar observações do exercício ${exercise.id}:`, error);
         }
       }
       
       setExerciseData(newData);
-      setPreviousWeekData(newPreviousData);
     }
 
-    loadExerciseData();
+    loadCurrentWeekData();
   }, [day.exercises, weekNumber]);
 
   // Helper para acessar dados da semana anterior
