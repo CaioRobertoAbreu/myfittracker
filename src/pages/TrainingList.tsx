@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Clock, Target, ArrowLeft, Plus } from 'lucide-react';
+import { CalendarDays, Clock, Target, ArrowLeft, Plus, AlertTriangle, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { updateTrainingExpiredStatus, deleteTrainingPlan } from '@/services/trainingService';
+import { useToast } from '@/hooks/use-toast';
 
 interface TrainingPlan {
   id: string;
@@ -12,11 +15,15 @@ interface TrainingPlan {
   description: string | null;
   total_weeks: number;
   current_week: number;
+  start_date: string;
+  end_date: string;
+  is_expired: boolean;
   created_at: string;
 }
 
 export default function TrainingList() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [trainingPlans, setTrainingPlans] = useState<TrainingPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +39,19 @@ export default function TrainingList() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTrainingPlans(data || []);
+      
+      // Verificar e atualizar automaticamente treinos vencidos
+      const currentDate = new Date().toISOString().split('T')[0];
+      const updatedPlans = data || [];
+      
+      for (const plan of updatedPlans) {
+        if (plan.end_date < currentDate && !plan.is_expired) {
+          await updateTrainingExpiredStatus(plan.id, true);
+          plan.is_expired = true;
+        }
+      }
+      
+      setTrainingPlans(updatedPlans);
     } catch (error) {
       console.error('Erro ao carregar planos de treino:', error);
     } finally {
@@ -42,6 +61,44 @@ export default function TrainingList() {
 
   const handleTrainingClick = (planId: string) => {
     navigate(`/treinos/${planId}`);
+  };
+
+  const handleToggleExpired = async (planId: string, currentStatus: boolean) => {
+    try {
+      await updateTrainingExpiredStatus(planId, !currentStatus);
+      setTrainingPlans(plans => 
+        plans.map(plan => 
+          plan.id === planId ? { ...plan, is_expired: !currentStatus } : plan
+        )
+      );
+      toast({
+        title: "Status atualizado",
+        description: `Treino marcado como ${!currentStatus ? 'vencido' : 'ativo'}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeletePlan = async (planId: string) => {
+    try {
+      await deleteTrainingPlan(planId);
+      setTrainingPlans(plans => plans.filter(plan => plan.id !== planId));
+      toast({
+        title: "Treino excluído",
+        description: "O treino foi removido com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o treino",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -104,12 +161,13 @@ export default function TrainingList() {
             {trainingPlans.map((plan) => (
               <Card 
                 key={plan.id}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/30 hover:scale-[1.02]"
-                onClick={() => handleTrainingClick(plan.id)}
+                className={`group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 ${
+                  plan.is_expired ? 'opacity-75' : ''
+                }`}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => handleTrainingClick(plan.id)}>
                       <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                         {plan.name}
                       </CardTitle>
@@ -117,16 +175,37 @@ export default function TrainingList() {
                         {plan.description || "Sem descrição"}
                       </CardDescription>
                     </div>
-                    <Badge 
-                      variant="secondary" 
-                      className="ml-2 bg-primary/10 text-primary border-primary/20"
-                    >
-                      Ativo
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {plan.is_expired ? (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Vencido
+                        </Badge>
+                      ) : (
+                        <Badge 
+                          variant="secondary" 
+                          className="bg-primary/10 text-primary border-primary/20"
+                        >
+                          Ativo
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 
                 <CardContent className="space-y-4">
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Início:</p>
+                      <p className="font-medium">{new Date(plan.start_date).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Fim:</p>
+                      <p className="font-medium">{new Date(plan.end_date).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  </div>
+
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
@@ -154,23 +233,76 @@ export default function TrainingList() {
                     </div>
                     <div className="w-full bg-muted/30 rounded-full h-2 overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-300 ease-out"
+                        className={`h-full transition-all duration-300 ease-out ${
+                          plan.is_expired 
+                            ? 'bg-gradient-to-r from-destructive to-destructive/80' 
+                            : 'bg-gradient-to-r from-primary to-primary/80'
+                        }`}
                         style={{ width: `${(plan.current_week / plan.total_weeks) * 100}%` }}
                       />
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <Button 
-                    className="w-full mt-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTrainingClick(plan.id);
-                    }}
-                  >
-                    <Target className="h-4 w-4 mr-2" />
-                    Continuar Treino
-                  </Button>
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTrainingClick(plan.id);
+                      }}
+                    >
+                      <Target className="h-4 w-4 mr-2" />
+                      {plan.is_expired ? 'Ver Treino' : 'Continuar'}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleExpired(plan.id, plan.is_expired);
+                      }}
+                      className="flex items-center gap-1"
+                    >
+                      {plan.is_expired ? (
+                        <CheckCircle className="h-4 w-4" />
+                      ) : (
+                        <XCircle className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Confirmar Exclusão</DialogTitle>
+                          <DialogDescription>
+                            Tem certeza que deseja excluir o treino "{plan.name}"? 
+                            Esta ação não pode ser desfeita e todos os dados do treino serão permanentemente removidos.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline">Cancelar</Button>
+                          <Button 
+                            variant="destructive"
+                            onClick={() => handleDeletePlan(plan.id)}
+                          >
+                            Excluir Treino
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </CardContent>
               </Card>
             ))}

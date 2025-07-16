@@ -46,6 +46,9 @@ export interface TrainingPlan {
   description?: string;
   totalWeeks: number;
   currentWeek: number;
+  startDate: Date;
+  endDate: Date;
+  isExpired: boolean;
   weeks: TrainingWeek[];
   createdAt: Date;
   updatedAt: Date;

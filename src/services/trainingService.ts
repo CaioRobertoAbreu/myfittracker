@@ -308,6 +308,9 @@ export async function getTrainingPlan(planId?: string): Promise<TrainingPlan | n
       description: plan.description,
       totalWeeks: plan.total_weeks,
       currentWeek: plan.current_week,
+      startDate: new Date(plan.start_date),
+      endDate: new Date(plan.end_date),
+      isExpired: plan.is_expired,
       createdAt: new Date(plan.created_at),
       updatedAt: new Date(plan.updated_at),
       weeks: plan.weeks.map((week: any) => ({
@@ -442,6 +445,8 @@ export async function createTrainingPlan(planData: {
   name: string;
   description: string | null;
   totalWeeks: number;
+  startDate: Date;
+  endDate: Date;
   days: Array<{
     id: string;
     dayNumber: number;
@@ -467,7 +472,10 @@ export async function createTrainingPlan(planData: {
         name: planData.name,
         description: planData.description,
         total_weeks: planData.totalWeeks,
-        current_week: 1
+        current_week: 1,
+        start_date: planData.startDate.toISOString().split('T')[0],
+        end_date: planData.endDate.toISOString().split('T')[0],
+        is_expired: false
       })
       .select()
       .single();
@@ -589,5 +597,112 @@ export async function getExerciseObservation(exerciseId: string, weekNumber: num
   } catch (error) {
     console.error('Erro ao buscar observação:', error);
     return { observations: '', isCompleted: false };
+  }
+}
+
+// Atualizar status de vencido do treino
+export async function updateTrainingExpiredStatus(planId: string, isExpired: boolean): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('training_plans')
+      .update({ is_expired: isExpired })
+      .eq('id', planId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Erro ao atualizar status de vencido:', error);
+    throw error;
+  }
+}
+
+// Deletar treino completo
+export async function deleteTrainingPlan(planId: string): Promise<void> {
+  try {
+    // Buscar todas as semanas deste plano
+    const { data: weeks, error: weeksError } = await supabase
+      .from('training_weeks')
+      .select('id')
+      .eq('training_plan_id', planId);
+
+    if (weeksError) throw weeksError;
+
+    if (weeks && weeks.length > 0) {
+      const weekIds = weeks.map(w => w.id);
+
+      // Buscar todos os dias dessas semanas
+      const { data: days, error: daysError } = await supabase
+        .from('training_days')
+        .select('id')
+        .in('training_week_id', weekIds);
+
+      if (daysError) throw daysError;
+
+      if (days && days.length > 0) {
+        const dayIds = days.map(d => d.id);
+
+        // Buscar todos os exercícios desses dias
+        const { data: exercises, error: exercisesError } = await supabase
+          .from('exercises')
+          .select('id')
+          .in('training_day_id', dayIds);
+
+        if (exercisesError) throw exercisesError;
+
+        if (exercises && exercises.length > 0) {
+          const exerciseIds = exercises.map(e => e.id);
+
+          // Deletar observações dos exercícios
+          const { error: obsError } = await supabase
+            .from('exercise_observations')
+            .delete()
+            .in('exercise_id', exerciseIds);
+
+          if (obsError) throw obsError;
+
+          // Deletar séries dos exercícios
+          const { error: setsError } = await supabase
+            .from('exercise_sets')
+            .delete()
+            .in('exercise_id', exerciseIds);
+
+          if (setsError) throw setsError;
+
+          // Deletar exercícios
+          const { error: exercisesDeleteError } = await supabase
+            .from('exercises')
+            .delete()
+            .in('training_day_id', dayIds);
+
+          if (exercisesDeleteError) throw exercisesDeleteError;
+        }
+
+        // Deletar dias
+        const { error: daysDeleteError } = await supabase
+          .from('training_days')
+          .delete()
+          .in('training_week_id', weekIds);
+
+        if (daysDeleteError) throw daysDeleteError;
+      }
+
+      // Deletar semanas
+      const { error: weeksDeleteError } = await supabase
+        .from('training_weeks')
+        .delete()
+        .eq('training_plan_id', planId);
+
+      if (weeksDeleteError) throw weeksDeleteError;
+    }
+
+    // Deletar o plano de treino
+    const { error: planError } = await supabase
+      .from('training_plans')
+      .delete()
+      .eq('id', planId);
+
+    if (planError) throw planError;
+  } catch (error) {
+    console.error('Erro ao deletar plano de treino:', error);
+    throw error;
   }
 }

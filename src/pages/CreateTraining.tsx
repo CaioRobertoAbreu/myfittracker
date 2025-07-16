@@ -39,6 +39,12 @@ export default function CreateTraining() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [totalWeeks, setTotalWeeks] = useState(8);
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(() => {
+    const end = new Date();
+    end.setDate(end.getDate() + (8 * 7));
+    return end.toISOString().split('T')[0];
+  });
   const [days, setDays] = useState<TrainingDay[]>([
     {
       id: 'day-1',
@@ -89,6 +95,14 @@ export default function CreateTraining() {
     ));
   };
 
+  // Atualizar data de fim quando semanas mudarem
+  const updateEndDate = (weeks: number) => {
+    setTotalWeeks(weeks);
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + (weeks * 7));
+    setEndDate(end.toISOString().split('T')[0]);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -116,6 +130,8 @@ export default function CreateTraining() {
         name: name.trim(),
         description: description.trim() || null,
         totalWeeks,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
         days
       });
 
@@ -170,7 +186,7 @@ export default function CreateTraining() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome do Treino *</Label>
                   <Input
@@ -183,6 +199,21 @@ export default function CreateTraining() {
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="startDate">Data de Início</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      const end = new Date(e.target.value);
+                      end.setDate(end.getDate() + (totalWeeks * 7));
+                      setEndDate(end.toISOString().split('T')[0]);
+                    }}
+                  />
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="weeks">Duração (semanas)</Label>
                   <Input
                     id="weeks"
@@ -190,20 +221,32 @@ export default function CreateTraining() {
                     min="1"
                     max="52"
                     value={totalWeeks}
-                    onChange={(e) => setTotalWeeks(parseInt(e.target.value) || 8)}
+                    onChange={(e) => updateEndDate(parseInt(e.target.value) || 8)}
                   />
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Descreva os objetivos e características do treino..."
-                  rows={3}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">Data de Fim (calculada)</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Descreva os objetivos e características do treino..."
+                    rows={3}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

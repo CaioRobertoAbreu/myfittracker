@@ -186,8 +186,11 @@ export type Database = {
           created_at: string
           current_week: number
           description: string | null
+          end_date: string | null
           id: string
+          is_expired: boolean
           name: string
+          start_date: string | null
           total_weeks: number
           updated_at: string
           user_id: string
@@ -196,8 +199,11 @@ export type Database = {
           created_at?: string
           current_week?: number
           description?: string | null
+          end_date?: string | null
           id?: string
+          is_expired?: boolean
           name: string
+          start_date?: string | null
           total_weeks: number
           updated_at?: string
           user_id: string
@@ -206,8 +212,11 @@ export type Database = {
           created_at?: string
           current_week?: number
           description?: string | null
+          end_date?: string | null
           id?: string
+          is_expired?: boolean
           name?: string
+          start_date?: string | null
           total_weeks?: number
           updated_at?: string
           user_id?: string

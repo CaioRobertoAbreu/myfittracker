@@ -17,6 +17,9 @@ const mockTrainingPlan: TrainingPlan = {
   description: "Programa focado em hipertrofia com progressão dupla",
   totalWeeks: 8,
   currentWeek: 1,
+  startDate: new Date(),
+  endDate: new Date(Date.now() + 8 * 7 * 24 * 60 * 60 * 1000), // 8 semanas a partir de hoje
+  isExpired: false,
   createdAt: new Date(),
   updatedAt: new Date(),
   weeks: Array.from({ length: 8 }, (_, weekIndex) => ({
