@@ -262,11 +262,11 @@ export async function initializeMockData() {
 }
 
 // Buscar plano de treino
-export async function getTrainingPlan(): Promise<TrainingPlan | null> {
+export async function getTrainingPlan(planId?: string): Promise<TrainingPlan | null> {
   try {
-    console.log('Buscando plano de treino...');
+    console.log('Buscando plano de treino...', { planId });
     
-    const { data: plans, error } = await supabase
+    let query = supabase
       .from('training_plans')
       .select(`
         *,
@@ -277,8 +277,15 @@ export async function getTrainingPlan(): Promise<TrainingPlan | null> {
             exercises(*)
           )
         )
-      `)
-      .limit(1);
+      `);
+      
+    if (planId) {
+      query = query.eq('id', planId);
+    } else {
+      query = query.limit(1);
+    }
+    
+    const { data: plans, error } = await query;
 
     console.log('Resultado da busca:', { plans, error });
 
