@@ -1,3 +1,9 @@
+export interface ExerciseSet {
+  setNumber: number;
+  weight: number;
+  reps: number;
+}
+
 export interface Exercise {
   id: string;
   name: string;
@@ -9,6 +15,7 @@ export interface Exercise {
   techniqueDescription?: string;
   observations?: string;
   weekProgress?: WeekProgress[];
+  performedSets?: ExerciseSet[];
 }
 
 export interface WeekProgress {

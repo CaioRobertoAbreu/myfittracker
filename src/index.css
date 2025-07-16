@@ -39,12 +39,12 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Training specific colors */
-    --training-primary: 142.1 76.2% 36.3%;
+    /* Training specific colors - muted gray tones */
+    --training-primary: 220 9% 46%;
     --training-secondary: 217.2 32.6% 17.5%;
-    --training-accent: 266.1 76.2% 36.3%;
-    --training-success: 120 76.2% 36.3%;
-    --training-warning: 45 76.2% 36.3%;
+    --training-accent: 220 8% 55%;
+    --training-success: 220 9% 46%;
+    --training-warning: 25 20% 50%;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--training-primary)), hsl(var(--training-accent)));

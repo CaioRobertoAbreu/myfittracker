@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Info, Target, Clock, Zap, FileText } from "lucide-react";
-import { TrainingDay } from "@/types/training";
+import { ArrowLeft, Target, Clock, Zap, FileText, Plus, Minus } from "lucide-react";
+import { TrainingDay, ExerciseSet } from "@/types/training";
 
 interface TrainingDayViewProps {
   day: TrainingDay;
@@ -15,6 +16,78 @@ interface TrainingDayViewProps {
 
 export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProps) {
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+  const [exerciseData, setExerciseData] = useState<{[key: string]: {
+    observations: string;
+    performedSets: ExerciseSet[];
+  }}>(
+    Object.fromEntries(
+      day.exercises.map(ex => [
+        ex.id, 
+        {
+          observations: ex.observations || "",
+          performedSets: Array.from({ length: ex.sets }, (_, i) => ({
+            setNumber: i + 1,
+            weight: 0,
+            reps: 0
+          }))
+        }
+      ])
+    )
+  );
+
+  const updateObservations = (exerciseId: string, value: string) => {
+    setExerciseData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        observations: value
+      }
+    }));
+  };
+
+  const updateSet = (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number) => {
+    setExerciseData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        performedSets: prev[exerciseId].performedSets.map((set, idx) => 
+          idx === setIndex ? { ...set, [field]: value } : set
+        )
+      }
+    }));
+  };
+
+  const addSet = (exerciseId: string) => {
+    setExerciseData(prev => {
+      const currentSets = prev[exerciseId].performedSets;
+      return {
+        ...prev,
+        [exerciseId]: {
+          ...prev[exerciseId],
+          performedSets: [
+            ...currentSets,
+            {
+              setNumber: currentSets.length + 1,
+              weight: 0,
+              reps: 0
+            }
+          ]
+        }
+      };
+    });
+  };
+
+  const removeSet = (exerciseId: string, setIndex: number) => {
+    setExerciseData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        performedSets: prev[exerciseId].performedSets
+          .filter((_, idx) => idx !== setIndex)
+          .map((set, idx) => ({ ...set, setNumber: idx + 1 }))
+      }
+    }));
+  };
 
   return (
     <div className="animate-fade-in">
@@ -37,7 +110,10 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
         {day.exercises.map((exercise, index) => (
           <Card 
             key={exercise.id} 
-            className="group transition-all duration-300 hover:shadow-lg hover:shadow-training-primary/20 hover:border-training-primary/50"
+            className="group transition-all duration-300 hover:shadow-lg hover:shadow-training-primary/20 hover:border-training-primary/50 cursor-pointer"
+            onClick={() => setSelectedExercise(
+              selectedExercise === exercise.id ? null : exercise.id
+            )}
           >
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between">
@@ -51,19 +127,9 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                   <Badge variant="outline">
                     {exercise.sets}x{exercise.reps}@{exercise.rpe}
                   </Badge>
-                  {exercise.technique && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedExercise(
-                        selectedExercise === exercise.id ? null : exercise.id
-                      )}
-                      className="gap-2"
-                    >
-                      <Info className="h-4 w-4" />
-                      {selectedExercise === exercise.id ? "Ocultar" : "Técnica"}
-                    </Button>
-                  )}
+                  <Badge className="bg-training-warning/20 text-training-warning border-training-warning/30">
+                    {exercise.technique}
+                  </Badge>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -106,32 +172,98 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
 
               {/* Expanded Details */}
               {selectedExercise === exercise.id && (
-                <div className="space-y-4 animate-scale-in">
+                <div className="space-y-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
                   <Separator />
                   
-                  {exercise.technique && (
+                  {/* Technique Description */}
+                  {exercise.techniqueDescription && (
                     <div>
                       <h4 className="font-semibold text-sm mb-2 text-training-primary">
                         Técnica: {exercise.technique}
                       </h4>
-                      {exercise.techniqueDescription && (
-                        <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                          {exercise.techniqueDescription}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {exercise.observations && (
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2 text-training-accent">
-                        Observações
-                      </h4>
-                      <p className="text-sm text-muted-foreground bg-accent/10 p-3 rounded-lg border border-accent/20">
-                        {exercise.observations}
+                      <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                        {exercise.techniqueDescription}
                       </p>
                     </div>
                   )}
+
+                  {/* Sets Performance Tracking */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-sm">Registro das Séries</h4>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addSet(exercise.id);
+                          }}
+                          className="gap-1"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Série
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {exerciseData[exercise.id]?.performedSets.map((set, setIndex) => (
+                        <div key={setIndex} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                          <span className="text-sm font-medium w-16">Série {set.setNumber}</span>
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-muted-foreground">Peso:</label>
+                            <Input
+                              type="number"
+                              value={set.weight || ""}
+                              onChange={(e) => updateSet(exercise.id, setIndex, 'weight', parseFloat(e.target.value) || 0)}
+                              className="w-20 h-8 text-sm"
+                              placeholder="kg"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-muted-foreground">Reps:</label>
+                            <Input
+                              type="number"
+                              value={set.reps || ""}
+                              onChange={(e) => updateSet(exercise.id, setIndex, 'reps', parseInt(e.target.value) || 0)}
+                              className="w-16 h-8 text-sm"
+                              placeholder="0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          {exerciseData[exercise.id]?.performedSets.length > exercise.sets && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeSet(exercise.id, setIndex);
+                              }}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Observations */}
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-training-accent">
+                      Observações
+                    </h4>
+                    <Textarea
+                      value={exerciseData[exercise.id]?.observations || ""}
+                      onChange={(e) => updateObservations(exercise.id, e.target.value)}
+                      placeholder="Adicione suas observações sobre este exercício..."
+                      className="min-h-[80px] resize-none"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
 
                   {/* Week Progress Preview */}
                   <div>
@@ -146,9 +278,9 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                             key={week}
                             className={`p-2 text-center text-xs rounded border transition-all ${
                               isCurrent
-                                ? "bg-primary text-primary-foreground border-primary"
+                                ? "bg-training-primary text-primary-foreground border-training-primary"
                                 : isDeload
-                                ? "bg-warning/10 text-warning border-warning/30"
+                                ? "bg-training-warning/10 text-training-warning border-training-warning/30"
                                 : "bg-muted text-muted-foreground border-border"
                             }`}
                           >

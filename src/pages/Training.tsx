@@ -36,8 +36,8 @@ const mockTrainingPlan: TrainingPlan = {
               reps: "3-5",
               rpe: 8,
               progressionType: "Progressão Dupla",
-              technique: "Pausa controlada",
-              techniqueDescription: "Desça controladamente e faça uma pausa de 2 segundos no fundo antes de subir",
+              technique: "Progressão Dupla",
+              techniqueDescription: "Aumente as repetições até atingir o máximo da faixa, depois aumente o peso e volte ao mínimo de repetições. Pausa de 2 segundos na posição inferior.",
               observations: "Manter a coluna neutra durante todo o movimento"
             },
             {
