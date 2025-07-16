@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { TrainingPlan } from "@/types/training";
 import { TrainingDayView } from "@/components/TrainingDayView";
 import { WeekProgress } from "@/components/WeekProgress";
+import { getTrainingPlan, initializeMockData } from "@/services/trainingService";
 
 // Mock data based on the provided spreadsheet
 const mockTrainingPlan: TrainingPlan = {
@@ -279,8 +280,57 @@ export default function Training() {
   const navigate = useNavigate();
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const currentWeek = mockTrainingPlan.weeks.find(w => w.weekNumber === selectedWeek);
+  // Carregar dados do Supabase
+  useEffect(() => {
+    async function loadTrainingPlan() {
+      try {
+        let plan = await getTrainingPlan();
+        
+        if (!plan) {
+          // Se não houver plano, inicializar com dados mock
+          await initializeMockData();
+          plan = await getTrainingPlan();
+        }
+        
+        setTrainingPlan(plan);
+      } catch (error) {
+        console.error('Erro ao carregar plano de treino:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadTrainingPlan();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-training-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando plano de treino...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!trainingPlan) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Erro ao carregar plano de treino</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentWeek = trainingPlan.weeks.find(w => w.weekNumber === selectedWeek);
   const activeDays = currentWeek?.days.filter(day => day.exercises.length > 0) || [];
 
   return (
@@ -301,17 +351,17 @@ export default function Training() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  {mockTrainingPlan.name}
+                  {trainingPlan.name}
                 </h1>
                 <p className="text-muted-foreground">
-                  {mockTrainingPlan.description}
+                  {trainingPlan.description}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <Badge variant="secondary" className="gap-2">
                 <Calendar className="h-3 w-3" />
-                Semana {mockTrainingPlan.currentWeek} de {mockTrainingPlan.totalWeeks}
+                Semana {trainingPlan.currentWeek} de {trainingPlan.totalWeeks}
               </Badge>
               <Button size="sm" className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -328,7 +378,7 @@ export default function Training() {
             {/* Week Progress Overview */}
             <WeekProgress 
               currentWeek={selectedWeek}
-              totalWeeks={mockTrainingPlan.totalWeeks}
+              totalWeeks={trainingPlan.totalWeeks}
               onWeekChange={setSelectedWeek}
             />
 

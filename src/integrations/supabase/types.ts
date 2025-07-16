@@ -14,7 +14,241 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      exercise_observations: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          is_completed: boolean
+          observations: string | null
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          is_completed?: boolean
+          observations?: string | null
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          is_completed?: boolean
+          observations?: string | null
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_observations_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_sets: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          reps: number | null
+          set_number: number
+          updated_at: string
+          week_number: number
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          reps?: number | null
+          set_number: number
+          updated_at?: string
+          week_number: number
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          reps?: number | null
+          set_number?: number
+          updated_at?: string
+          week_number?: number
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_sets_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercises: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          name: string
+          progression_type: string
+          reps: string
+          rpe: number
+          sets: number
+          technique: string | null
+          technique_description: string | null
+          training_day_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          name: string
+          progression_type: string
+          reps: string
+          rpe: number
+          sets: number
+          technique?: string | null
+          technique_description?: string | null
+          training_day_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          name?: string
+          progression_type?: string
+          reps?: string
+          rpe?: number
+          sets?: number
+          technique?: string | null
+          technique_description?: string | null
+          training_day_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercises_training_day_id_fkey"
+            columns: ["training_day_id"]
+            isOneToOne: false
+            referencedRelation: "training_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          name: string
+          training_week_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          name: string
+          training_week_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          name?: string
+          training_week_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_days_training_week_id_fkey"
+            columns: ["training_week_id"]
+            isOneToOne: false
+            referencedRelation: "training_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_plans: {
+        Row: {
+          created_at: string
+          current_week: number
+          description: string | null
+          id: string
+          name: string
+          total_weeks: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_week?: number
+          description?: string | null
+          id?: string
+          name: string
+          total_weeks: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_week?: number
+          description?: string | null
+          id?: string
+          name?: string
+          total_weeks?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      training_weeks: {
+        Row: {
+          created_at: string
+          id: string
+          is_deload: boolean
+          training_plan_id: string
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_deload?: boolean
+          training_plan_id: string
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_deload?: boolean
+          training_plan_id?: string
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_weeks_training_plan_id_fkey"
+            columns: ["training_plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

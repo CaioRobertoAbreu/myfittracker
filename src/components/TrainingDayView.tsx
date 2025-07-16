@@ -7,6 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Target, Clock, Zap, FileText, Plus, Minus, Check, CheckCircle2 } from "lucide-react";
 import { TrainingDay, ExerciseSet } from "@/types/training";
+import { 
+  saveExerciseSets, 
+  getExerciseSets, 
+  saveExerciseObservation, 
+  getExerciseObservation 
+} from "@/services/trainingService";
 
 interface TrainingDayViewProps {
   day: TrainingDay;
@@ -39,44 +45,62 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     )
   );
 
-  // Carrega dados salvos do localStorage
+  const [previousWeekData, setPreviousWeekData] = useState<{[key: string]: {
+    sets: ExerciseSet[] | null;
+    observations: string;
+  }}>({});
+
+  // Carrega dados salvos do Supabase
   useEffect(() => {
-    const savedData = localStorage.getItem(`training-${day.name}-week-${weekNumber}`);
-    if (savedData) {
-      try {
-        setExerciseData(JSON.parse(savedData));
-      } catch (error) {
-        console.error('Erro ao carregar dados salvos:', error);
+    async function loadExerciseData() {
+      const newData = { ...exerciseData };
+      const newPreviousData: {[key: string]: { sets: ExerciseSet[] | null; observations: string }} = {};
+      
+      for (const exercise of day.exercises) {
+        try {
+          // Carregar séries da semana atual
+          const sets = await getExerciseSets(exercise.id, weekNumber);
+          if (sets.length > 0) {
+            newData[exercise.id].performedSets = sets;
+          }
+          
+          // Carregar observações e status da semana atual
+          const observation = await getExerciseObservation(exercise.id, weekNumber);
+          newData[exercise.id].observations = observation.observations;
+          newData[exercise.id].completed = observation.isCompleted;
+
+          // Carregar dados da semana anterior
+          if (weekNumber > 1) {
+            const previousSets = await getExerciseSets(exercise.id, weekNumber - 1);
+            const previousObservation = await getExerciseObservation(exercise.id, weekNumber - 1);
+            
+            newPreviousData[exercise.id] = {
+              sets: previousSets.length > 0 ? previousSets : null,
+              observations: previousObservation.observations
+            };
+          }
+        } catch (error) {
+          console.error(`Erro ao carregar dados do exercício ${exercise.id}:`, error);
+        }
       }
+      
+      setExerciseData(newData);
+      setPreviousWeekData(newPreviousData);
     }
-  }, [day.name, weekNumber]);
 
-  // Salva dados no localStorage quando exerciseData muda
-  useEffect(() => {
-    localStorage.setItem(`training-${day.name}-week-${weekNumber}`, JSON.stringify(exerciseData));
-  }, [exerciseData, day.name, weekNumber]);
+    loadExerciseData();
+  }, [day.exercises, weekNumber]);
 
-  // Carrega histórico apenas da semana anterior
+  // Helper para acessar dados da semana anterior
   const getPreviousWeekData = (exerciseId: string) => {
-    if (weekNumber <= 1) return null;
-    
-    const previousWeekData = localStorage.getItem(`training-${day.name}-week-${weekNumber - 1}`);
-    console.log(`Buscando dados da semana ${weekNumber - 1} para ${day.name}:`, previousWeekData);
-    
-    if (previousWeekData) {
-      try {
-        const data = JSON.parse(previousWeekData);
-        console.log(`Dados encontrados para exercício ${exerciseId}:`, data[exerciseId]?.performedSets);
-        return data[exerciseId]?.performedSets || null;
-      } catch (error) {
-        console.error('Erro ao carregar dados da semana anterior:', error);
-        return null;
-      }
-    }
-    return null;
+    return previousWeekData[exerciseId]?.sets || null;
   };
 
-  const updateObservations = (exerciseId: string, value: string) => {
+  const getPreviousObservation = (exerciseId: string) => {
+    return previousWeekData[exerciseId]?.observations || "";
+  };
+
+  const updateObservations = async (exerciseId: string, value: string) => {
     setExerciseData(prev => ({
       ...prev,
       [exerciseId]: {
@@ -84,6 +108,18 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
         observations: value
       }
     }));
+
+    // Salvar no Supabase
+    try {
+      await saveExerciseObservation(
+        exerciseId, 
+        weekNumber, 
+        value, 
+        exerciseData[exerciseId]?.completed || false
+      );
+    } catch (error) {
+      console.error('Erro ao salvar observação:', error);
+    }
   };
 
   const toggleObservations = (exerciseId: string) => {
@@ -96,14 +132,28 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     }));
   };
 
-  const toggleExerciseCompletion = (exerciseId: string) => {
+  const toggleExerciseCompletion = async (exerciseId: string) => {
+    const newCompleted = !exerciseData[exerciseId].completed;
+    
     setExerciseData(prev => ({
       ...prev,
       [exerciseId]: {
         ...prev[exerciseId],
-        completed: !prev[exerciseId].completed
+        completed: newCompleted
       }
     }));
+
+    // Salvar no Supabase
+    try {
+      await saveExerciseObservation(
+        exerciseId, 
+        weekNumber, 
+        exerciseData[exerciseId]?.observations || '', 
+        newCompleted
+      );
+    } catch (error) {
+      console.error('Erro ao salvar status de conclusão:', error);
+    }
   };
 
   const formatPerformedSets = (sets: ExerciseSet[]) => {
@@ -115,27 +165,8 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
       .join(' / ');
   };
 
-  const getPreviousObservation = (exerciseId: string) => {
-    if (weekNumber <= 1) return "";
-    
-    const previousWeekData = localStorage.getItem(`training-${day.name}-week-${weekNumber - 1}`);
-    console.log(`Buscando observação da semana ${weekNumber - 1} para ${day.name}:`, previousWeekData);
-    
-    if (previousWeekData) {
-      try {
-        const data = JSON.parse(previousWeekData);
-        const observation = data[exerciseId]?.observations || "";
-        console.log(`Observação encontrada para exercício ${exerciseId}:`, observation);
-        return observation;
-      } catch (error) {
-        console.error('Erro ao carregar observação da semana anterior:', error);
-        return "";
-      }
-    }
-    return "";
-  };
 
-  const keepPreviousObservation = (exerciseId: string) => {
+  const keepPreviousObservation = async (exerciseId: string) => {
     const previousObs = getPreviousObservation(exerciseId);
     if (previousObs) {
       setExerciseData(prev => ({
@@ -145,19 +176,40 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
           observations: previousObs
         }
       }));
+
+      // Salvar no Supabase
+      try {
+        await saveExerciseObservation(
+          exerciseId, 
+          weekNumber, 
+          previousObs, 
+          exerciseData[exerciseId]?.completed || false
+        );
+      } catch (error) {
+        console.error('Erro ao salvar observação:', error);
+      }
     }
   };
 
-  const updateSet = (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number) => {
-    setExerciseData(prev => ({
-      ...prev,
+  const updateSet = async (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number) => {
+    const newData = {
+      ...exerciseData,
       [exerciseId]: {
-        ...prev[exerciseId],
-        performedSets: prev[exerciseId].performedSets.map((set, idx) => 
+        ...exerciseData[exerciseId],
+        performedSets: exerciseData[exerciseId].performedSets.map((set, idx) => 
           idx === setIndex ? { ...set, [field]: value } : set
         )
       }
-    }));
+    };
+    
+    setExerciseData(newData);
+
+    // Salvar no Supabase com debounce
+    try {
+      await saveExerciseSets(exerciseId, weekNumber, newData[exerciseId].performedSets);
+    } catch (error) {
+      console.error('Erro ao salvar séries:', error);
+    }
   };
 
   const addSet = (exerciseId: string) => {
@@ -302,29 +354,19 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
               </div>
 
               {/* Previous Week Summary */}
-              {(() => {
-                const previousSets = getPreviousWeekData(exercise.id);
-                const previousObs = getPreviousObservation(exercise.id);
-                const hasPreviousData = previousSets || previousObs;
-                
-                console.log(`Renderizando resumo da semana anterior para ${exercise.name}:`, {
-                  previousSets,
-                  previousObs,
-                  hasPreviousData,
-                  weekNumber
-                });
-                
-                return (weekNumber > 1) && (
-                  <div className="mt-3 p-3 bg-muted/30 rounded-lg border-l-4 border-training-accent/50">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Semana Anterior ({weekNumber - 1}):</p>
-                    
-                    {previousSets && previousSets.length > 0 ? (
+              {weekNumber > 1 && (
+                <div className="mt-3 p-3 bg-muted/30 rounded-lg border-l-4 border-training-accent/50">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Semana Anterior ({weekNumber - 1}):</p>
+                  
+                  {(() => {
+                    const previousSets = getPreviousWeekData(exercise.id);
+                    return previousSets && previousSets.length > 0 ? (
                       <div className="mb-2">
                         <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
                         <p className="text-sm text-foreground">
                           {previousSets
-                            .filter((set: any) => set.reps > 0 && set.weight > 0)
-                            .map((set: any, index: number) => `${set.reps} reps x ${set.weight} kg`)
+                            .filter(set => set.reps > 0 && set.weight > 0)
+                            .map(set => `${set.reps} reps x ${set.weight} kg`)
                             .join(' / ') || "Nenhuma série registrada"}
                         </p>
                       </div>
@@ -333,9 +375,12 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                         <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
                         <p className="text-sm text-muted-foreground italic">Nenhuma série registrada na semana anterior</p>
                       </div>
-                    )}
-                    
-                    {previousObs ? (
+                    );
+                  })()}
+                  
+                  {(() => {
+                    const previousObs = getPreviousObservation(exercise.id);
+                    return previousObs ? (
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Observação:</p>
                         <p className="text-xs text-muted-foreground italic">"{previousObs}"</p>
@@ -345,10 +390,10 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                         <p className="text-xs text-muted-foreground mb-1">Observação:</p>
                         <p className="text-xs text-muted-foreground italic">Nenhuma observação na semana anterior</p>
                       </div>
-                    )}
-                  </div>
-                );
-              })()}
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Expanded Details */}
               {selectedExercise === exercise.id && (
@@ -380,7 +425,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                              </span>
                            </div>
                            <div className="grid grid-cols-3 gap-2">
-                             {previousSets.map((prevSet: any, prevSetIndex: number) => (
+                             {previousSets.map((prevSet, prevSetIndex) => (
                                <div key={prevSetIndex} className="text-xs bg-background/50 p-2 rounded border">
                                  <span className="font-medium">S{prevSetIndex + 1}:</span> {prevSet.reps} reps @ {prevSet.weight}kg
                                </div>
