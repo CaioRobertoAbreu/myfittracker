@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowLeft, Plus, Trash2, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
 import { UpdateDietRequest } from "@/types/diet";
+import { cn } from "@/lib/utils";
 
 interface DietFood {
   foodName: string;
@@ -29,6 +33,7 @@ const EditDiet = () => {
   const { dietId } = useParams<{ dietId: string }>();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [meals, setMeals] = useState<DietMealForm[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -58,6 +63,7 @@ const EditDiet = () => {
 
       setName(diet.name);
       setDescription(diet.description || "");
+      setStartDate(diet.startDate ? new Date(diet.startDate) : undefined);
       setMeals(diet.meals.map(meal => ({
         name: meal.name,
         orderNumber: meal.orderNumber,
@@ -153,6 +159,7 @@ const EditDiet = () => {
         id: dietId,
         name: name.trim(),
         description: description.trim() || undefined,
+        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
         meals: meals.map(meal => ({
           name: meal.name,
           orderNumber: meal.orderNumber,
@@ -226,6 +233,32 @@ const EditDiet = () => {
                   placeholder="Descrição opcional da dieta"
                   rows={3}
                 />
+              </div>
+              <div>
+                <Label htmlFor="startDate">Data de Início</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "dd/MM/yyyy") : <span>Selecionar data</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
           </Card>

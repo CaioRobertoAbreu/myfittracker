@@ -23,6 +23,8 @@ export const dietService = {
       name: diet.name,
       description: diet.description,
       userId: diet.user_id,
+      startDate: diet.start_date,
+      isExpired: diet.is_expired,
       createdAt: diet.created_at,
       updatedAt: diet.updated_at,
       meals: diet.diet_meals
@@ -73,6 +75,8 @@ export const dietService = {
       name: diet.name,
       description: diet.description,
       userId: diet.user_id,
+      startDate: diet.start_date,
+      isExpired: diet.is_expired,
       createdAt: diet.created_at,
       updatedAt: diet.updated_at,
       meals: diet.diet_meals
@@ -107,6 +111,7 @@ export const dietService = {
       .insert({
         name: request.name,
         description: request.description,
+        start_date: request.startDate,
         user_id: "00000000-0000-0000-0000-000000000000", // Mock user ID for now
       })
       .select()
@@ -164,6 +169,7 @@ export const dietService = {
       .update({
         name: request.name,
         description: request.description,
+        start_date: request.startDate,
       })
       .eq("id", request.id);
 
@@ -268,5 +274,27 @@ export const dietService = {
       carbsPercentage,
       fatPercentage,
     };
+  },
+
+  async markDietAsExpired(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("diets")
+      .update({ is_expired: true })
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`Error marking diet as expired: ${error.message}`);
+    }
+  },
+
+  async markDietAsActive(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("diets")
+      .update({ is_expired: false })
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`Error marking diet as active: ${error.message}`);
+    }
   },
 };

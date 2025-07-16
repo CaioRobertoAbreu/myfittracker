@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { format } from "date-fns";
+import { Plus, Edit, Trash2, ArrowLeft, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
@@ -45,6 +47,31 @@ const DietList = () => {
       toast({
         title: "Erro",
         description: "Erro ao excluir dieta",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleExpired = async (diet: Diet) => {
+    try {
+      if (diet.isExpired) {
+        await dietService.markDietAsActive(diet.id);
+        toast({
+          title: "Sucesso",
+          description: "Dieta marcada como ativa",
+        });
+      } else {
+        await dietService.markDietAsExpired(diet.id);
+        toast({
+          title: "Sucesso",
+          description: "Dieta marcada como vencida",
+        });
+      }
+      loadDiets();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status da dieta",
         variant: "destructive",
       });
     }
@@ -106,8 +133,23 @@ const DietList = () => {
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span className="truncate">{diet.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{diet.name}</span>
+                        {diet.isExpired && (
+                          <Badge variant="destructive" className="text-xs">
+                            Vencida
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleExpired(diet)}
+                          title={diet.isExpired ? "Marcar como ativa" : "Marcar como vencida"}
+                        >
+                          <Clock className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -144,6 +186,14 @@ const DietList = () => {
                     </CardTitle>
                     {diet.description && (
                       <p className="text-sm text-muted-foreground">{diet.description}</p>
+                    )}
+                    {diet.startDate && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          Iniciada em {format(new Date(diet.startDate), "dd/MM/yyyy")}
+                        </span>
+                      </div>
                     )}
                   </CardHeader>
                   <CardContent>

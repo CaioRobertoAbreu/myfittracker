@@ -27,6 +27,8 @@ export interface Diet {
   description?: string;
   userId: string;
   meals: DietMeal[];
+  startDate?: string;
+  isExpired: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +36,7 @@ export interface Diet {
 export interface CreateDietRequest {
   name: string;
   description?: string;
+  startDate?: string;
   meals: {
     name: string;
     orderNumber: number;

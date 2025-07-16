@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowLeft, Edit, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
 import { Diet } from "@/types/diet";
@@ -110,9 +112,24 @@ const ViewDiet = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">{diet.name}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">{diet.name}</h1>
+                {diet.isExpired && (
+                  <Badge variant="destructive" className="text-sm">
+                    Vencida
+                  </Badge>
+                )}
+              </div>
               {diet.description && (
                 <p className="text-muted-foreground mt-1">{diet.description}</p>
+              )}
+              {diet.startDate && (
+                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-sm">
+                    Iniciada em {format(new Date(diet.startDate), "dd/MM/yyyy")}
+                  </span>
+                </div>
               )}
             </div>
           </div>
