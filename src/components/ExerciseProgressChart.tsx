@@ -76,7 +76,23 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
                 totalVolume,
                 avgReps: Math.round(avgReps * 10) / 10
               });
+            } else {
+              // Adicionar semana com dados vazios se não há sets válidos
+              data.push({
+                week,
+                maxWeight: 0,
+                totalVolume: 0,
+                avgReps: 0
+              });
             }
+          } else {
+            // Adicionar semana com dados vazios se não há sets
+            data.push({
+              week,
+              maxWeight: 0,
+              totalVolume: 0,
+              avgReps: 0
+            });
           }
         }
         
@@ -92,13 +108,14 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
   }, [selectedExercise, totalWeeks]);
 
   const selectedExerciseData = exercises.find(ex => ex.id === selectedExercise);
-  const hasData = progressData.length > 0;
+  const hasData = progressData.some(data => data.maxWeight > 0 || data.totalVolume > 0);
 
   const calculateProgress = () => {
-    if (progressData.length < 2) return null;
+    const dataWithValues = progressData.filter(data => data.maxWeight > 0 || data.totalVolume > 0);
+    if (dataWithValues.length < 2) return null;
     
-    const firstWeek = progressData[0];
-    const lastWeek = progressData[progressData.length - 1];
+    const firstWeek = dataWithValues[0];
+    const lastWeek = dataWithValues[dataWithValues.length - 1];
     
     const weightProgress = ((lastWeek.maxWeight - firstWeek.maxWeight) / firstWeek.maxWeight) * 100;
     const volumeProgress = ((lastWeek.totalVolume - firstWeek.totalVolume) / firstWeek.totalVolume) * 100;
@@ -183,7 +200,7 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Peso Atual</p>
                     <p className="text-2xl font-bold">
-                      {progressData[progressData.length - 1]?.maxWeight || 0}kg
+                      {progressData.filter(d => d.maxWeight > 0).slice(-1)[0]?.maxWeight || 0}kg
                     </p>
                   </div>
                 </CardContent>
@@ -194,7 +211,7 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Volume Atual</p>
                     <p className="text-2xl font-bold">
-                      {Math.round(progressData[progressData.length - 1]?.totalVolume || 0)}kg
+                      {Math.round(progressData.filter(d => d.totalVolume > 0).slice(-1)[0]?.totalVolume || 0)}kg
                     </p>
                   </div>
                 </CardContent>
@@ -226,28 +243,41 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
                         tickFormatter={(value) => `Sem ${value}`}
                       />
                       <YAxis 
-                        domain={['dataMin - 5', 'dataMax + 5']}
+                        domain={[0, 'dataMax + 5']}
                         tickFormatter={(value) => `${value}kg`}
                       />
                       <ChartTooltip 
                         content={<ChartTooltipContent />}
                         labelFormatter={(value) => `Semana ${value}`}
-                        formatter={(value: number) => [`${value}kg`, 'Peso Máximo']}
+                        formatter={(value: number) => {
+                          if (value === 0) return ['Sem dados', 'Peso Máximo'];
+                          return [`${value}kg`, 'Peso Máximo'];
+                        }}
                       />
                       <Line
                         type="monotone"
                         dataKey="maxWeight"
                         stroke="hsl(var(--primary))"
                         strokeWidth={3}
-                        dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 6 }}
+                        dot={(props) => {
+                          const { cx, cy, payload } = props;
+                          if (payload.maxWeight === 0) {
+                            return <circle cx={cx} cy={cy} r={4} fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth={2} />;
+                          }
+                          return <circle cx={cx} cy={cy} r={6} fill="hsl(var(--primary))" strokeWidth={2} />;
+                        }}
                         activeDot={{ r: 8 }}
+                        connectNulls={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  Nenhum dado de treino registrado ainda
+                  <div className="text-center">
+                    <p>Nenhum dado de treino registrado ainda</p>
+                    <p className="text-sm mt-2">Registre seus treinos para visualizar a evolução</p>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -273,12 +303,16 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
                         tickFormatter={(value) => `Sem ${value}`}
                       />
                       <YAxis 
+                        domain={[0, 'dataMax + 50']}
                         tickFormatter={(value) => `${value}kg`}
                       />
                       <ChartTooltip 
                         content={<ChartTooltipContent />}
                         labelFormatter={(value) => `Semana ${value}`}
-                        formatter={(value: number) => [`${Math.round(value)}kg`, 'Volume Total']}
+                        formatter={(value: number) => {
+                          if (value === 0) return ['Sem dados', 'Volume Total'];
+                          return [`${Math.round(value)}kg`, 'Volume Total'];
+                        }}
                       />
                       <Bar
                         dataKey="totalVolume"
@@ -290,7 +324,10 @@ export function ExerciseProgressChart({ exercises, totalWeeks }: ExerciseProgres
                 </ChartContainer>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  Nenhum dado de treino registrado ainda
+                  <div className="text-center">
+                    <p>Nenhum dado de treino registrado ainda</p>
+                    <p className="text-sm mt-2">Registre seus treinos para visualizar a evolução</p>
+                  </div>
                 </div>
               )}
             </CardContent>
