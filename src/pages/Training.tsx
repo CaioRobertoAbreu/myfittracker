@@ -8,6 +8,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TrainingPlan } from "@/types/training";
 import { TrainingDayView } from "@/components/TrainingDayView";
 import { WeekProgress } from "@/components/WeekProgress";
+import { ExerciseProgressChart } from "@/components/ExerciseProgressChart";
 import { getTrainingPlan, initializeMockData } from "@/services/trainingService";
 
 // Mock data based on the provided spreadsheet
@@ -341,6 +342,9 @@ export default function Training() {
 
   const currentWeek = trainingPlan.weeks.find(w => w.weekNumber === selectedWeek);
   const activeDays = currentWeek?.days.filter(day => day.exercises.length > 0) || [];
+  const allExercises = trainingPlan.weeks.flatMap(week => 
+    week.days.flatMap(day => day.exercises)
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -382,96 +386,112 @@ export default function Training() {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        {!selectedDay ? (
-          <>
-            {/* Week Progress Overview */}
-            <WeekProgress 
-              currentWeek={selectedWeek}
-              totalWeeks={trainingPlan.totalWeeks}
-              onWeekChange={setSelectedWeek}
-            />
+        <Tabs defaultValue="treinos" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="treinos">Treinos</TabsTrigger>
+            <TabsTrigger value="evolucao">Evolução</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="treinos" className="mt-6">
+            {!selectedDay ? (
+              <>
+                {/* Week Progress Overview */}
+                <WeekProgress 
+                  currentWeek={selectedWeek}
+                  totalWeeks={trainingPlan.totalWeeks}
+                  onWeekChange={setSelectedWeek}
+                />
 
-            {/* Training Days Grid */}
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-6">
-                <Dumbbell className="h-5 w-5 text-training-primary" />
-                <h2 className="text-xl font-semibold">
-                  Treinos da Semana {selectedWeek}
-                  {currentWeek?.isDeload && (
-                    <Badge variant="outline" className="ml-2">
-                      Deload
-                    </Badge>
-                  )}
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6">
-                {/* Deload Week Alert */}
-                {currentWeek?.isDeload && (
-                  <div className="mb-4 p-4 bg-training-warning/10 border border-training-warning/30 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-training-warning rounded-full"></div>
-                      <h3 className="font-semibold text-training-warning">Semana de Deload</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Esta é uma semana de recuperação. Reduza a intensidade e foque na técnica.
-                    </p>
-                  </div>
-                )}
-                {activeDays.map((day) => (
-                  <Card
-                    key={day.id}
-                    className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-training-primary/20 hover:border-training-primary/50 animate-fade-in"
-                    onClick={() => setSelectedDay(day.id)}
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="text-lg">{day.name}</span>
-                        <Badge variant="secondary">
-                          {day.exercises.length} exercícios
+                {/* Training Days Grid */}
+                <div className="mt-8">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Dumbbell className="h-5 w-5 text-training-primary" />
+                    <h2 className="text-xl font-semibold">
+                      Treinos da Semana {selectedWeek}
+                      {currentWeek?.isDeload && (
+                        <Badge variant="outline" className="ml-2">
+                          Deload
                         </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {day.exercises.slice(0, 3).map((exercise, idx) => (
-                          <div
-                            key={exercise.id}
-                            className="flex items-center justify-between text-sm"
-                          >
-                            <span className="text-muted-foreground truncate">
-                              {exercise.name}
-                            </span>
-                            <Badge variant="outline">
-                              {exercise.sets}x{exercise.reps}@{exercise.rpe}
+                      )}
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Deload Week Alert */}
+                    {currentWeek?.isDeload && (
+                      <div className="mb-4 p-4 bg-training-warning/10 border border-training-warning/30 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-training-warning rounded-full"></div>
+                          <h3 className="font-semibold text-training-warning">Semana de Deload</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Esta é uma semana de recuperação. Reduza a intensidade e foque na técnica.
+                        </p>
+                      </div>
+                    )}
+                    {activeDays.map((day) => (
+                      <Card
+                        key={day.id}
+                        className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-training-primary/20 hover:border-training-primary/50 animate-fade-in"
+                        onClick={() => setSelectedDay(day.id)}
+                      >
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center justify-between">
+                            <span className="text-lg">{day.name}</span>
+                            <Badge variant="secondary">
+                              {day.exercises.length} exercícios
                             </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {day.exercises.slice(0, 3).map((exercise, idx) => (
+                              <div
+                                key={exercise.id}
+                                className="flex items-center justify-between text-sm"
+                              >
+                                <span className="text-muted-foreground truncate">
+                                  {exercise.name}
+                                </span>
+                                <Badge variant="outline">
+                                  {exercise.sets}x{exercise.reps}@{exercise.rpe}
+                                </Badge>
+                              </div>
+                            ))}
+                            {day.exercises.length > 3 && (
+                              <div className="text-xs text-muted-foreground text-center">
+                                +{day.exercises.length - 3} exercícios
+                              </div>
+                            )}
                           </div>
-                        ))}
-                        {day.exercises.length > 3 && (
-                          <div className="text-xs text-muted-foreground text-center">
-                            +{day.exercises.length - 3} exercícios
+                          <div className="mt-4 flex items-center gap-2">
+                            <Target className="h-4 w-4 text-training-primary" />
+                            <span className="text-sm text-muted-foreground">
+                              Clique para ver detalhes
+                            </span>
                           </div>
-                        )}
-                      </div>
-                      <div className="mt-4 flex items-center gap-2">
-                        <Target className="h-4 w-4 text-training-primary" />
-                        <span className="text-sm text-muted-foreground">
-                          Clique para ver detalhes
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <TrainingDayView
-            day={activeDays.find(d => d.id === selectedDay)!}
-            weekNumber={selectedWeek}
-            onBack={() => setSelectedDay(null)}
-          />
-        )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <TrainingDayView
+                day={activeDays.find(d => d.id === selectedDay)!}
+                weekNumber={selectedWeek}
+                onBack={() => setSelectedDay(null)}
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="evolucao" className="mt-6">
+            <ExerciseProgressChart 
+              exercises={allExercises}
+              totalWeeks={trainingPlan.totalWeeks}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
