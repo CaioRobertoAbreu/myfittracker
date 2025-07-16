@@ -35,8 +35,8 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
           observations: "",
           performedSets: Array.from({ length: ex.sets }, (_, i) => ({
             setNumber: i + 1,
-            weight: 0,
-            reps: 0
+            weight: null, // Campo vazio inicialmente
+            reps: null    // Campo vazio inicialmente
           })),
           showObservations: false,
           completed: false
@@ -157,7 +157,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
   };
 
   const formatPerformedSets = (sets: ExerciseSet[]) => {
-    const completedSets = sets.filter(set => set.reps > 0 && set.weight > 0);
+    const completedSets = sets.filter(set => set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0);
     if (completedSets.length === 0) return "Nenhuma série registrada";
     
     return completedSets
@@ -191,7 +191,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     }
   };
 
-  const updateSet = async (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number) => {
+  const updateSet = async (exerciseId: string, setIndex: number, field: 'weight' | 'reps', value: number | null) => {
     const newData = {
       ...exerciseData,
       [exerciseId]: {
@@ -223,8 +223,8 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
             ...currentSets,
             {
               setNumber: currentSets.length + 1,
-              weight: 0,
-              reps: 0
+              weight: null, // Campo vazio para nova série
+              reps: null    // Campo vazio para nova série
             }
           ]
         }
@@ -365,13 +365,13 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                          <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
                          <div className="flex flex-wrap gap-1">
                            {previousSets
-                             .filter(set => set.reps > 0 && set.weight > 0)
+                             .filter(set => set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0)
                              .map((set, idx) => (
                                <span key={idx} className="text-xs bg-background/50 px-2 py-1 rounded border">
                                  S{idx + 1}: {set.reps} × {set.weight}kg
                                </span>
                              ))}
-                           {previousSets.filter(set => set.reps > 0 && set.weight > 0).length === 0 && (
+                           {previousSets.filter(set => set.reps !== null && set.weight !== null && set.reps > 0 && set.weight > 0).length === 0 && (
                              <span className="text-xs text-muted-foreground italic">Nenhuma série registrada</span>
                            )}
                          </div>
@@ -486,7 +486,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                             <Input
                               type="number"
                               value={set.reps || ""}
-                              onChange={(e) => updateSet(exercise.id, setIndex, 'reps', parseInt(e.target.value) || 0)}
+                              onChange={(e) => updateSet(exercise.id, setIndex, 'reps', parseInt(e.target.value) || null)}
                               className="w-16 h-8 text-sm"
                               placeholder="0"
                               onClick={(e) => e.stopPropagation()}
@@ -497,7 +497,7 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                             <Input
                               type="number"
                               value={set.weight || ""}
-                              onChange={(e) => updateSet(exercise.id, setIndex, 'weight', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => updateSet(exercise.id, setIndex, 'weight', parseFloat(e.target.value) || null)}
                               className="w-20 h-8 text-sm"
                               placeholder="kg"
                               onClick={(e) => e.stopPropagation()}

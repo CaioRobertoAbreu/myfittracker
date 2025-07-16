@@ -333,7 +333,7 @@ export async function getTrainingPlan(): Promise<TrainingPlan | null> {
 }
 
 // Salvar séries de um exercício
-export async function saveExerciseSets(exerciseId: string, weekNumber: number, sets: Array<{setNumber: number, weight: number, reps: number}>) {
+export async function saveExerciseSets(exerciseId: string, weekNumber: number, sets: Array<{setNumber: number, weight: number | null, reps: number | null}>) {
   try {
     // Primeiro, remover séries existentes para esta semana
     await supabase
@@ -342,12 +342,14 @@ export async function saveExerciseSets(exerciseId: string, weekNumber: number, s
       .eq('exercise_id', exerciseId)
       .eq('week_number', weekNumber);
 
-    // Inserir novas séries
-    if (sets.length > 0) {
+    // Inserir novas séries (apenas as que têm valores válidos)
+    const validSets = sets.filter(set => set.weight !== null && set.reps !== null);
+    
+    if (validSets.length > 0) {
       const { error } = await supabase
         .from('exercise_sets')
         .insert(
-          sets.map(set => ({
+          validSets.map(set => ({
             exercise_id: exerciseId,
             week_number: weekNumber,
             set_number: set.setNumber,
@@ -365,7 +367,7 @@ export async function saveExerciseSets(exerciseId: string, weekNumber: number, s
 }
 
 // Buscar séries de um exercício
-export async function getExerciseSets(exerciseId: string, weekNumber: number): Promise<Array<{setNumber: number, weight: number, reps: number}>> {
+export async function getExerciseSets(exerciseId: string, weekNumber: number): Promise<Array<{setNumber: number, weight: number | null, reps: number | null}>> {
   try {
     const { data, error } = await supabase
       .from('exercise_sets')
@@ -378,8 +380,8 @@ export async function getExerciseSets(exerciseId: string, weekNumber: number): P
 
     return data?.map(set => ({
       setNumber: set.set_number,
-      weight: set.weight || 0,
-      reps: set.reps || 0
+      weight: set.weight,
+      reps: set.reps
     })) || [];
   } catch (error) {
     console.error('Erro ao buscar séries:', error);

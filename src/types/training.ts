@@ -1,7 +1,7 @@
 export interface ExerciseSet {
   setNumber: number;
-  weight: number;
-  reps: number;
+  weight: number | null;
+  reps: number | null;
 }
 
 export interface Exercise {
