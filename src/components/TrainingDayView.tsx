@@ -61,11 +61,15 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     if (weekNumber <= 1) return null;
     
     const previousWeekData = localStorage.getItem(`training-${day.name}-week-${weekNumber - 1}`);
+    console.log(`Buscando dados da semana ${weekNumber - 1} para ${day.name}:`, previousWeekData);
+    
     if (previousWeekData) {
       try {
         const data = JSON.parse(previousWeekData);
+        console.log(`Dados encontrados para exercício ${exerciseId}:`, data[exerciseId]?.performedSets);
         return data[exerciseId]?.performedSets || null;
       } catch (error) {
+        console.error('Erro ao carregar dados da semana anterior:', error);
         return null;
       }
     }
@@ -115,11 +119,16 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
     if (weekNumber <= 1) return "";
     
     const previousWeekData = localStorage.getItem(`training-${day.name}-week-${weekNumber - 1}`);
+    console.log(`Buscando observação da semana ${weekNumber - 1} para ${day.name}:`, previousWeekData);
+    
     if (previousWeekData) {
       try {
         const data = JSON.parse(previousWeekData);
-        return data[exerciseId]?.observations || "";
+        const observation = data[exerciseId]?.observations || "";
+        console.log(`Observação encontrada para exercício ${exerciseId}:`, observation);
+        return observation;
       } catch (error) {
+        console.error('Erro ao carregar observação da semana anterior:', error);
         return "";
       }
     }
@@ -298,11 +307,18 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                 const previousObs = getPreviousObservation(exercise.id);
                 const hasPreviousData = previousSets || previousObs;
                 
-                return hasPreviousData && (
+                console.log(`Renderizando resumo da semana anterior para ${exercise.name}:`, {
+                  previousSets,
+                  previousObs,
+                  hasPreviousData,
+                  weekNumber
+                });
+                
+                return (weekNumber > 1) && (
                   <div className="mt-3 p-3 bg-muted/30 rounded-lg border-l-4 border-training-accent/50">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Semana Anterior:</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Semana Anterior ({weekNumber - 1}):</p>
                     
-                    {previousSets && (
+                    {previousSets && previousSets.length > 0 ? (
                       <div className="mb-2">
                         <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
                         <p className="text-sm text-foreground">
@@ -312,12 +328,22 @@ export function TrainingDayView({ day, weekNumber, onBack }: TrainingDayViewProp
                             .join(' / ') || "Nenhuma série registrada"}
                         </p>
                       </div>
+                    ) : (
+                      <div className="mb-2">
+                        <p className="text-xs text-muted-foreground mb-1">Séries realizadas:</p>
+                        <p className="text-sm text-muted-foreground italic">Nenhuma série registrada na semana anterior</p>
+                      </div>
                     )}
                     
-                    {previousObs && (
+                    {previousObs ? (
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Observação:</p>
                         <p className="text-xs text-muted-foreground italic">"{previousObs}"</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Observação:</p>
+                        <p className="text-xs text-muted-foreground italic">Nenhuma observação na semana anterior</p>
                       </div>
                     )}
                   </div>
