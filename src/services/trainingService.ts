@@ -430,6 +430,119 @@ export async function saveExerciseObservation(exerciseId: string, weekNumber: nu
   }
 }
 
+// Criar novo plano de treino
+export async function createTrainingPlan(planData: {
+  name: string;
+  description: string | null;
+  totalWeeks: number;
+  days: Array<{
+    id: string;
+    dayNumber: number;
+    name: string;
+    exercises: Array<{
+      id: string;
+      name: string;
+      sets: number;
+      reps: string;
+      rpe: number;
+      progressionType: string;
+      technique?: string;
+      techniqueDescription?: string;
+    }>;
+  }>;
+}): Promise<string> {
+  try {
+    // Criar plano de treino
+    const { data: plan, error: planError } = await supabase
+      .from('training_plans')
+      .insert({
+        user_id: crypto.randomUUID(), // Gerar UUID válido
+        name: planData.name,
+        description: planData.description,
+        total_weeks: planData.totalWeeks,
+        current_week: 1
+      })
+      .select()
+      .single();
+
+    if (planError) throw planError;
+
+    // Criar semanas
+    const weeks = Array.from({ length: planData.totalWeeks }, (_, i) => ({
+      training_plan_id: plan.id,
+      week_number: i + 1,
+      is_deload: false // Por padrão, sem deload
+    }));
+
+    const { data: createdWeeks, error: weeksError } = await supabase
+      .from('training_weeks')
+      .insert(weeks)
+      .select();
+
+    if (weeksError) throw weeksError;
+
+    // Criar dias e exercícios para cada semana
+    const allDays = [];
+    const allExercises = [];
+
+    for (const week of createdWeeks) {
+      for (const dayData of planData.days) {
+        // Criar dia
+        const dayToCreate = {
+          training_week_id: week.id,
+          day_number: dayData.dayNumber,
+          name: dayData.name
+        };
+        allDays.push(dayToCreate);
+      }
+    }
+
+    // Inserir todos os dias
+    const { data: createdDays, error: daysError } = await supabase
+      .from('training_days')
+      .insert(allDays)
+      .select();
+
+    if (daysError) throw daysError;
+
+    // Criar exercícios
+    for (let weekIndex = 0; weekIndex < createdWeeks.length; weekIndex++) {
+      for (let dayIndex = 0; dayIndex < planData.days.length; dayIndex++) {
+        const dayData = planData.days[dayIndex];
+        const createdDay = createdDays[weekIndex * planData.days.length + dayIndex];
+
+        for (const exerciseData of dayData.exercises) {
+          allExercises.push({
+            training_day_id: createdDay.id,
+            exercise_id: exerciseData.id,
+            name: exerciseData.name,
+            sets: exerciseData.sets,
+            reps: exerciseData.reps,
+            rpe: exerciseData.rpe,
+            progression_type: exerciseData.progressionType,
+            technique: exerciseData.technique || null,
+            technique_description: exerciseData.techniqueDescription || null
+          });
+        }
+      }
+    }
+
+    // Inserir todos os exercícios
+    if (allExercises.length > 0) {
+      const { error: exercisesError } = await supabase
+        .from('exercises')
+        .insert(allExercises);
+
+      if (exercisesError) throw exercisesError;
+    }
+
+    return plan.id;
+  } catch (error) {
+    console.error('Erro ao criar plano de treino:', error);
+    throw error;
+  }
+}
+
 // Buscar observação de um exercício
 export async function getExerciseObservation(exerciseId: string, weekNumber: number): Promise<{observations: string, isCompleted: boolean}> {
   try {

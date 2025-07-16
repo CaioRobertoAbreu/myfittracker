@@ -76,7 +76,10 @@ export default function TrainingList() {
             </div>
           </div>
           
-          <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+          <Button 
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+            onClick={() => navigate('/treinos/novo')}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Novo Treino
           </Button>
@@ -88,7 +91,10 @@ export default function TrainingList() {
             <Target className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
             <h3 className="text-xl font-semibold mb-2">Nenhum treino encontrado</h3>
             <p className="text-muted-foreground mb-6">Crie seu primeiro plano de treino para começar</p>
-            <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+            <Button 
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              onClick={() => navigate('/treinos/novo')}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Criar Primeiro Treino
             </Button>
