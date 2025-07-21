@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
-import { ArrowLeft, Edit, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { format, startOfDay, isToday } from "date-fns";
+import { ArrowLeft, Edit, Calendar as CalendarIcon, ChevronDown, ChevronUp, RotateCcw, Calendar as CalendarIconAlt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
 import { Diet } from "@/types/diet";
+import { cn } from "@/lib/utils";
 
 const ViewDiet = () => {
   const { dietId } = useParams<{ dietId: string }>();
@@ -17,6 +20,7 @@ const ViewDiet = () => {
   const [loading, setLoading] = useState(true);
   const [consumedFoods, setConsumedFoods] = useState<Set<string>>(new Set());
   const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -25,7 +29,7 @@ const ViewDiet = () => {
       loadDiet();
       loadConsumedFoods();
     }
-  }, [dietId]);
+  }, [dietId, selectedDate]);
 
   const loadDiet = async () => {
     if (!dietId) return;
@@ -56,15 +60,19 @@ const ViewDiet = () => {
 
   const loadConsumedFoods = () => {
     if (!dietId) return;
-    const stored = localStorage.getItem(`consumed-foods-${dietId}`);
+    const dateKey = format(startOfDay(selectedDate), "yyyy-MM-dd");
+    const stored = localStorage.getItem(`consumed-foods-${dietId}-${dateKey}`);
     if (stored) {
       setConsumedFoods(new Set(JSON.parse(stored)));
+    } else {
+      setConsumedFoods(new Set());
     }
   };
 
   const saveConsumedFoods = (foods: Set<string>) => {
     if (dietId) {
-      localStorage.setItem(`consumed-foods-${dietId}`, JSON.stringify([...foods]));
+      const dateKey = format(startOfDay(selectedDate), "yyyy-MM-dd");
+      localStorage.setItem(`consumed-foods-${dietId}-${dateKey}`, JSON.stringify([...foods]));
     }
   };
 
@@ -87,6 +95,24 @@ const ViewDiet = () => {
       newExpandedMeals.add(mealId);
     }
     setExpandedMeals(newExpandedMeals);
+  };
+
+  const resetDayProgress = () => {
+    setConsumedFoods(new Set());
+    if (dietId) {
+      const dateKey = format(startOfDay(selectedDate), "yyyy-MM-dd");
+      localStorage.removeItem(`consumed-foods-${dietId}-${dateKey}`);
+    }
+    toast({
+      title: "Progresso resetado",
+      description: `Progresso do dia ${format(selectedDate, "dd/MM/yyyy")} foi resetado`,
+    });
+  };
+
+  const onDateChange = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+    }
   };
 
   if (loading) {
@@ -137,7 +163,7 @@ const ViewDiet = () => {
               )}
               {diet.startDate && (
                 <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   <span className="text-xs md:text-sm">
                     Iniciada em {format(new Date(diet.startDate), "dd/MM/yyyy")}
                   </span>
@@ -145,16 +171,68 @@ const ViewDiet = () => {
               )}
             </div>
           </div>
-          <Button onClick={() => navigate(`/dietas/${diet.id}/editar`)} className="w-full md:w-auto">
-            <Edit className="mr-2 h-4 w-4" />
-            Editar Dieta
-          </Button>
+
+          {/* Controles de data e ações */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal min-w-[200px]",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIconAlt className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "dd/MM/yyyy") : <span>Selecionar data</span>}
+                    {isToday(selectedDate) && (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        Hoje
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={onDateChange}
+                    initialFocus
+                    className="p-3"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetDayProgress}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Resetar Dia
+              </Button>
+              <Button onClick={() => navigate(`/dietas/${diet.id}/editar`)} className="flex-1 sm:flex-none">
+                <Edit className="mr-2 h-4 w-4" />
+                Editar Dieta
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Resumo nutricional total */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Resumo Nutricional Total</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Resumo Nutricional Total</CardTitle>
+              <Badge variant="outline" className="text-xs">
+                {format(selectedDate, "dd/MM/yyyy")}
+                {isToday(selectedDate) && " - Hoje"}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
