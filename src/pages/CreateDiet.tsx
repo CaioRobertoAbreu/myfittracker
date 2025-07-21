@@ -106,29 +106,52 @@ const CreateDiet = () => {
       return;
     }
 
+    // Verificar se há pelo menos uma refeição com nome
+    if (meals.length === 0 || !meals.some(meal => meal.name.trim() !== "")) {
+      toast({
+        title: "Erro",
+        description: "É necessário ter pelo menos uma refeição com nome",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const request: CreateDietRequest = {
         name: name.trim(),
         description: description.trim() || undefined,
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        meals: meals.map(meal => ({
-          name: meal.name,
-          orderNumber: meal.orderNumber,
-          foods: meal.foods.filter(food => food.foodName.trim() !== "")
-        }))
+        meals: meals
+          .filter(meal => meal.name.trim() !== "")
+          .map(meal => ({
+            name: meal.name.trim(),
+            orderNumber: meal.orderNumber,
+            foods: meal.foods
+              .filter(food => food.foodName.trim() !== "")
+              .map(food => ({
+                foodName: food.foodName.trim(),
+                quantity: food.quantity.trim(),
+                proteinAnimal: Number(food.proteinAnimal) || 0,
+                proteinVegetable: Number(food.proteinVegetable) || 0,
+                carbs: Number(food.carbs) || 0,
+                fat: Number(food.fat) || 0,
+              }))
+          }))
       };
 
+      console.log("Criando dieta com dados:", request);
       await dietService.createDiet(request);
       toast({
         title: "Sucesso",
         description: "Dieta criada com sucesso",
       });
       navigate("/dietas");
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Erro ao criar dieta:", error);
       toast({
         title: "Erro",
-        description: "Erro ao criar dieta",
+        description: error.message || "Erro ao criar dieta",
         variant: "destructive",
       });
     } finally {
