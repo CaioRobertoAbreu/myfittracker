@@ -402,7 +402,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      mark_password_changed: {
+        Args: { user_id: string }
+        Returns: undefined
+      }
+      user_needs_password_change: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
