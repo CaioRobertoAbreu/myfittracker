@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format, startOfDay, isToday } from "date-fns";
-import { ArrowLeft, Edit, Calendar as CalendarIcon, ChevronDown, ChevronUp, RotateCcw, Calendar as CalendarIconAlt } from "lucide-react";
+import { format, startOfDay, isToday, addDays, subDays } from "date-fns";
+import { ArrowLeft, Edit, Calendar as CalendarIcon, ChevronDown, ChevronUp, RotateCcw, Calendar as CalendarIconAlt, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -115,6 +115,18 @@ const ViewDiet = () => {
     }
   };
 
+  const goToPreviousDay = () => {
+    setSelectedDate(prev => subDays(prev, 1));
+  };
+
+  const goToNextDay = () => {
+    setSelectedDate(prev => addDays(prev, 1));
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
@@ -174,13 +186,23 @@ const ViewDiet = () => {
 
           {/* Controles de data e ações */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            {/* Navegação de datas */}
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousDay}
+                className="p-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "justify-start text-left font-normal min-w-[200px]",
+                      "justify-start text-left font-normal min-w-[180px]",
                       !selectedDate && "text-muted-foreground"
                     )}
                   >
@@ -199,10 +221,30 @@ const ViewDiet = () => {
                     selected={selectedDate}
                     onSelect={onDateChange}
                     initialFocus
-                    className="p-3"
+                    className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextDay}
+                className="p-2"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+
+              {!isToday(selectedDate) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goToToday}
+                  className="text-xs"
+                >
+                  Hoje
+                </Button>
+              )}
             </div>
 
             <div className="flex gap-2">

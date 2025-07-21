@@ -16,6 +16,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
   const [resetPassword, setResetPassword] = useState(false);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
@@ -36,8 +37,14 @@ const Auth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Check if user needs to change password
+        if (session?.user?.user_metadata?.needs_password_change) {
+          setNeedsPasswordChange(true);
+          return; // Don't redirect if password change is needed
+        }
+        
         // Redirect authenticated users to home (only if not in recovery mode)
-        if (session?.user && !resetPassword) {
+        if (session?.user && !resetPassword && !needsPasswordChange) {
           navigate("/");
         }
       }
@@ -48,8 +55,14 @@ const Auth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       
+      // Check if user needs to change password
+      if (session?.user?.user_metadata?.needs_password_change) {
+        setNeedsPasswordChange(true);
+        return;
+      }
+      
       // Redirect if already authenticated (but not during password recovery)
-      if (session?.user && !type) {
+      if (session?.user && !type && !needsPasswordChange) {
         navigate("/");
       }
     });
@@ -125,6 +138,17 @@ const Auth = () => {
       }
 
       if (data.user) {
+        // Check if user needs to change password
+        if (data.user.user_metadata?.needs_password_change) {
+          setNeedsPasswordChange(true);
+          toast({
+            title: "Alteração de senha obrigatória",
+            description: "Por favor, altere sua senha temporária",
+            variant: "destructive",
+          });
+          return;
+        }
+
         toast({
           title: "Sucesso",
           description: "Login realizado com sucesso",
@@ -234,21 +258,31 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      // Call our edge function to generate temporary password
+      const response = await fetch('https://hhxtbsqhaihgvjpulnjl.supabase.co/functions/v1/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoeHRic3FoYWloZ3ZqcHVsbmpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MzYzNDcsImV4cCI6MjA2ODAxMjM0N30.3VqDU8d20qET04yJ_2-Mcq60Er_fIXtbc_UnZZ6q-LQ',
+        },
+        body: JSON.stringify({ email }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao enviar senha temporária');
+      }
 
       toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para resetar sua senha",
+        title: "Senha temporária enviada!",
+        description: result.message,
       });
       setForgotPassword(false);
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Erro ao enviar email de reset da senha",
+        description: error.message || "Erro ao enviar senha temporária",
         variant: "destructive",
       });
     } finally {
@@ -289,7 +323,12 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await supabase.auth.updateUser({ 
+        password,
+        data: {
+          needs_password_change: false // Remove the flag after password change
+        }
+      });
 
       if (error) throw error;
 
@@ -298,6 +337,7 @@ const Auth = () => {
         description: "Senha alterada com sucesso",
       });
       
+      setNeedsPasswordChange(false);
       // Redirect to home after successful password reset
       window.location.href = '/';
     } catch (error: any) {
@@ -325,13 +365,25 @@ const Auth = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {resetPassword ? (
+          {resetPassword || needsPasswordChange ? (
             <div className="space-y-4">
               <div className="text-center">
-                <h3 className="text-lg font-semibold">Nova Senha</h3>
+                <h3 className="text-lg font-semibold">
+                  {needsPasswordChange ? "Alterar Senha Temporária" : "Nova Senha"}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Digite sua nova senha
+                  {needsPasswordChange 
+                    ? "Você está usando uma senha temporária. Por favor, defina uma nova senha." 
+                    : "Digite sua nova senha"
+                  }
                 </p>
+                {needsPasswordChange && (
+                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800">
+                      ⚠️ Por segurança, você deve alterar sua senha temporária antes de continuar
+                    </p>
+                  </div>
+                )}
               </div>
               
               <form onSubmit={handleResetPassword} className="space-y-4">
@@ -364,6 +416,11 @@ const Auth = () => {
                 >
                   {loading ? "Alterando..." : "Alterar Senha"}
                 </Button>
+                {needsPasswordChange && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Você não pode acessar o aplicativo até alterar sua senha
+                  </p>
+                )}
               </form>
             </div>
           ) : forgotPassword ? (
@@ -371,7 +428,7 @@ const Auth = () => {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Esqueci minha senha</h3>
                 <p className="text-sm text-muted-foreground">
-                  Digite seu email para receber instruções de redefinição de senha
+                  Digite seu email para receber uma senha temporária
                 </p>
               </div>
               
@@ -392,8 +449,13 @@ const Auth = () => {
                   className="w-full" 
                   disabled={loading}
                 >
-                  {loading ? "Enviando..." : "Enviar email de reset"}
+                  {loading ? "Enviando..." : "Enviar senha temporária"}
                 </Button>
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800">
+                    💡 Você receberá uma senha temporária por email que deverá ser alterada no primeiro login
+                  </p>
+                </div>
                 <Button 
                   type="button" 
                   variant="outline" 
