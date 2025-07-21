@@ -280,71 +280,148 @@ const CreateDiet = () => {
                       </p>
                     ) : (
                       <div className="space-y-3">
-                        <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground mb-2 px-3">
-                          <span>Alimento</span>
-                          <span>Quantidade</span>
-                          <span>Proteína (A) g</span>
-                          <span>Proteína (V) g</span>
-                          <span>Carboidratos g</span>
-                          <span>Gorduras g</span>
-                          <span></span>
-                        </div>
-                        {meal.foods.map((food, foodIndex) => (
-                          <div key={foodIndex} className="grid grid-cols-7 gap-2 items-center p-3 border rounded">
-                            <Input
-                              placeholder="Alimento"
-                              value={food.foodName}
-                              onChange={(e) => updateFood(mealIndex, foodIndex, "foodName", e.target.value)}
-                            />
-                            <Input
-                              placeholder="Qtd"
-                              value={food.quantity}
-                              onChange={(e) => updateFood(mealIndex, foodIndex, "quantity", e.target.value)}
-                            />
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="0"
-                              value={food.proteinAnimal}
-                              onChange={(e) => updateFood(mealIndex, foodIndex, "proteinAnimal", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                            />
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="0"
-                              value={food.proteinVegetable}
-                              onChange={(e) => updateFood(mealIndex, foodIndex, "proteinVegetable", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                            />
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="0"
-                              value={food.carbs}
-                              onChange={(e) => updateFood(mealIndex, foodIndex, "carbs", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                            />
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="0"
-                              value={food.fat}
-                              onChange={(e) => updateFood(mealIndex, foodIndex, "fat", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                            />
-                            <Button
-                              type="button"
-                              onClick={() => removeFood(mealIndex, foodIndex)}
-                              size="sm"
-                              variant="destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                        {/* Layout Desktop */}
+                        <div className="hidden lg:block">
+                          <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground mb-2 px-3">
+                            <span>Alimento</span>
+                            <span>Quantidade</span>
+                            <span>Proteína (A) g</span>
+                            <span>Proteína (V) g</span>
+                            <span>Carboidratos g</span>
+                            <span>Gorduras g</span>
+                            <span></span>
                           </div>
-                        ))}
+                          {meal.foods.map((food, foodIndex) => (
+                            <div key={foodIndex} className="grid grid-cols-7 gap-2 items-center p-3 border rounded">
+                              <Input
+                                placeholder="Alimento"
+                                value={food.foodName}
+                                onChange={(e) => updateFood(mealIndex, foodIndex, "foodName", e.target.value)}
+                              />
+                              <Input
+                                placeholder="Qtd"
+                                value={food.quantity}
+                                onChange={(e) => updateFood(mealIndex, foodIndex, "quantity", e.target.value)}
+                              />
+                              <Input
+                                type="number"
+                                step="0.1"
+                                placeholder="0"
+                                value={food.proteinAnimal}
+                                onChange={(e) => updateFood(mealIndex, foodIndex, "proteinAnimal", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                              />
+                              <Input
+                                type="number"
+                                step="0.1"
+                                placeholder="0"
+                                value={food.proteinVegetable}
+                                onChange={(e) => updateFood(mealIndex, foodIndex, "proteinVegetable", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                              />
+                              <Input
+                                type="number"
+                                step="0.1"
+                                placeholder="0"
+                                value={food.carbs}
+                                onChange={(e) => updateFood(mealIndex, foodIndex, "carbs", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                              />
+                              <Input
+                                type="number"
+                                step="0.1"
+                                placeholder="0"
+                                value={food.fat}
+                                onChange={(e) => updateFood(mealIndex, foodIndex, "fat", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                              />
+                              <Button
+                                type="button"
+                                onClick={() => removeFood(mealIndex, foodIndex)}
+                                size="sm"
+                                variant="destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Layout Mobile/Tablet */}
+                        <div className="lg:hidden space-y-3">
+                          {meal.foods.map((food, foodIndex) => (
+                            <div key={foodIndex} className="p-3 border rounded space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Input
+                                  placeholder="Nome do alimento"
+                                  value={food.foodName}
+                                  onChange={(e) => updateFood(mealIndex, foodIndex, "foodName", e.target.value)}
+                                  className="flex-1 mr-2"
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() => removeFood(mealIndex, foodIndex)}
+                                  size="sm"
+                                  variant="destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Quantidade</Label>
+                                <Input
+                                  placeholder="Ex: 100g, 1 xícara..."
+                                  value={food.quantity}
+                                  onChange={(e) => updateFood(mealIndex, foodIndex, "quantity", e.target.value)}
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Proteína Animal (g)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="0"
+                                    value={food.proteinAnimal}
+                                    onChange={(e) => updateFood(mealIndex, foodIndex, "proteinAnimal", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Proteína Vegetal (g)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="0"
+                                    value={food.proteinVegetable}
+                                    onChange={(e) => updateFood(mealIndex, foodIndex, "proteinVegetable", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Carboidratos (g)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="0"
+                                    value={food.carbs}
+                                    onChange={(e) => updateFood(mealIndex, foodIndex, "carbs", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Gorduras (g)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="0"
+                                    value={food.fat}
+                                    onChange={(e) => updateFood(mealIndex, foodIndex, "fat", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                         
                         {/* Resumo nutricional da refeição */}
                         {meal.foods.length > 0 && (
                           <div className="mt-3 p-3 bg-muted/50 rounded border-t">
                             <div className="text-sm font-medium mb-2">Resumo da Refeição:</div>
-                            <div className="grid grid-cols-4 gap-4 text-xs">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 text-xs">
                               <div>
                                 <span className="text-muted-foreground">Proteína: </span>
                                 <span className="font-medium">
@@ -391,9 +468,9 @@ const CreateDiet = () => {
                 <CardTitle>Resumo Nutricional Total</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-primary/10 rounded">
-                    <div className="text-2xl font-bold text-primary">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                  <div className="text-center p-3 md:p-4 bg-primary/10 rounded">
+                    <div className="text-xl md:text-2xl font-bold text-primary">
                       {Math.round(
                         meals.reduce((mealSum, meal) =>
                           mealSum + meal.foods.reduce((foodSum, food) =>
@@ -402,29 +479,29 @@ const CreateDiet = () => {
                         )
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground">Calorias</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">Calorias</div>
                   </div>
-                  <div className="text-center p-4 bg-secondary/10 rounded">
-                    <div className="text-2xl font-bold text-secondary">
+                  <div className="text-center p-3 md:p-4 bg-secondary/10 rounded">
+                    <div className="text-xl md:text-2xl font-bold text-secondary">
                       {(meals.reduce((mealSum, meal) =>
                         mealSum + meal.foods.reduce((foodSum, food) =>
                           foodSum + (Number(food.proteinAnimal) || 0) + (Number(food.proteinVegetable) || 0), 0
                         ), 0
                       )).toFixed(1)}g
                     </div>
-                    <div className="text-sm text-muted-foreground">Proteína</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">Proteína</div>
                   </div>
-                  <div className="text-center p-4 bg-accent/10 rounded">
-                    <div className="text-2xl font-bold text-accent">
+                  <div className="text-center p-3 md:p-4 bg-accent/10 rounded">
+                    <div className="text-xl md:text-2xl font-bold text-accent">
                       {(meals.reduce((mealSum, meal) =>
                         mealSum + meal.foods.reduce((foodSum, food) =>
                           foodSum + (Number(food.carbs) || 0), 0
                         ), 0
                       )).toFixed(1)}g
                     </div>
-                    <div className="text-sm text-muted-foreground">Carboidratos</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">Carboidratos</div>
                   </div>
-                  <div className="text-center p-4 bg-muted/50 rounded">
+                  <div className="text-center p-3 md:p-4 bg-muted/50 rounded">
                     <div className="text-2xl font-bold">
                       {(meals.reduce((mealSum, meal) =>
                         mealSum + meal.foods.reduce((foodSum, food) =>
@@ -439,16 +516,17 @@ const CreateDiet = () => {
             </Card>
           )}
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate("/dietas")}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Criando..." : "Criar Dieta"}
             </Button>
           </div>
