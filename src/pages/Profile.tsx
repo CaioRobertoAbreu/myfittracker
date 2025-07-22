@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, User as UserIcon, Key, Save } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Key, Save, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,6 +26,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetingPassword, setResetingPassword] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -180,6 +181,51 @@ const Profile = () => {
     }
   };
 
+  const handleExportData = async () => {
+    if (!session) return;
+
+    setExportingData(true);
+    try {
+      const response = await supabase.functions.invoke('export-data', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      // Create blob and download
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], {
+        type: 'application/json',
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fittracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Backup realizado!",
+        description: "Seus dados foram exportados com sucesso",
+      });
+    } catch (error: any) {
+      console.error('Erro ao exportar dados:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao exportar dados de backup",
+        variant: "destructive",
+      });
+    } finally {
+      setExportingData(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
@@ -215,7 +261,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">{/* grid changed to 3 columns */}
           {/* Informações do Usuário */}
           <Card>
             <CardHeader>
@@ -316,6 +362,52 @@ const Profile = () => {
                 >
                   Sair da Conta
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Backup e Dados */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-primary" />
+                Backup de Dados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Exportar Dados</Label>
+                <p className="text-sm text-muted-foreground">
+                  Baixe um arquivo JSON com todos os seus dados de treino e dieta para backup
+                </p>
+                <Button
+                  onClick={handleExportData}
+                  disabled={exportingData}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {exportingData ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Baixar Backup JSON
+                    </>
+                  )}
+                </Button>
+                <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                  <p className="font-medium mb-1">O arquivo de backup contém:</p>
+                  <ul className="space-y-1">
+                    <li>• Todos os planos de treino e exercícios</li>
+                    <li>• Histórico de séries e observações</li>
+                    <li>• Todas as dietas e refeições</li>
+                    <li>• Informações nutricionais</li>
+                    <li>• Dados do perfil</li>
+                  </ul>
+                </div>
               </div>
             </CardContent>
           </Card>
