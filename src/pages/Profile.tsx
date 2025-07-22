@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, User as UserIcon, Key, Save, Download } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Key, Save, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,6 +27,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [resetingPassword, setResetingPassword] = useState(false);
   const [exportingData, setExportingData] = useState(false);
+  const [importingData, setImportingData] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -226,6 +227,74 @@ const Profile = () => {
     }
   };
 
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !session) return;
+
+    // Reset the input value to allow re-selecting the same file
+    event.target.value = '';
+
+    if (!file.name.endsWith('.json')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione um arquivo JSON",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImportingData(true);
+    try {
+      const fileContent = await file.text();
+      let jsonData;
+      
+      try {
+        jsonData = JSON.parse(fileContent);
+      } catch (parseError) {
+        throw new Error("Arquivo JSON inválido");
+      }
+
+      // Validate basic structure
+      if (!jsonData.export_info || !jsonData.training_data || !jsonData.diet_data) {
+        throw new Error("Formato de backup inválido");
+      }
+
+      const response = await supabase.functions.invoke('import-data', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: jsonData,
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: "Importação realizada!",
+        description: `Dados importados com sucesso: ${Object.entries(response.data.imported)
+          .filter(([_, count]) => (count as number) > 0)
+          .map(([type, count]) => `${count} ${type}`)
+          .join(', ')}`,
+      });
+
+      // Refresh the page to show imported data
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Erro ao importar dados:', error);
+      toast({
+        title: "Erro na importação",
+        description: error.message || "Erro ao importar dados do backup",
+        variant: "destructive",
+      });
+    } finally {
+      setImportingData(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
@@ -406,6 +475,51 @@ const Profile = () => {
                     <li>• Todas as dietas e refeições</li>
                     <li>• Informações nutricionais</li>
                     <li>• Dados do perfil</li>
+                  </ul>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label>Importar Dados</Label>
+                <p className="text-sm text-muted-foreground">
+                  Selecione um arquivo JSON de backup para restaurar seus dados
+                </p>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportData}
+                    disabled={importingData}
+                    className="hidden"
+                    id="import-file"
+                  />
+                  <Button
+                    onClick={() => document.getElementById('import-file')?.click()}
+                    disabled={importingData}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {importingData ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                        Importando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Selecionar Arquivo JSON
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="font-medium mb-1 text-amber-800">⚠️ Atenção:</p>
+                  <ul className="space-y-1 text-amber-700">
+                    <li>• Os dados importados serão adicionados aos existentes</li>
+                    <li>• Não substitui dados atuais, apenas adiciona novos</li>
+                    <li>• A página será recarregada após a importação</li>
                   </ul>
                 </div>
               </div>
