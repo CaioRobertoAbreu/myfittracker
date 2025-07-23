@@ -169,35 +169,76 @@ const Auth = () => {
     }
   };
 
-  const handleKeycloakSignIn = async () => {
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       // Clean up existing state
       cleanupAuthState();
-      
-      // Attempt global sign out
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'keycloak',
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
-          redirectTo: `${window.location.origin}/`,
+          emailRedirectTo: redirectUrl
         }
       });
 
       if (error) {
-        throw error;
+        let errorMessage = "Erro ao criar conta";
+        
+        switch (error.message) {
+          case "User already registered":
+            errorMessage = "Este email já está cadastrado. Tente fazer login";
+            break;
+          case "Password should be at least 6 characters":
+            errorMessage = "A senha deve ter pelo menos 6 caracteres";
+            break;
+          case "Signup is disabled":
+            errorMessage = "Cadastro de novos usuários está desabilitado";
+            break;
+          default:
+            errorMessage = error.message;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      // OAuth will redirect, so we don't need to handle success here
+      if (data.user) {
+        toast({
+          title: "Sucesso",
+          description: "Conta criada com sucesso! Verifique seu email para confirmar",
+        });
+        
+        // If user is immediately confirmed, redirect
+        if (data.session) {
+          window.location.href = '/';
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao fazer login com Keycloak",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -428,73 +469,90 @@ const Auth = () => {
               </form>
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Keycloak Login Button */}
-              <Button 
-                type="button"
-                onClick={handleKeycloakSignIn}
-                disabled={loading}
-                className="w-full flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                {loading ? "Conectando..." : "Criar conta / Entrar com Keycloak"}
-              </Button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Ou entre com email e senha
-                  </span>
-                </div>
-              </div>
+            <Tabs defaultValue="login" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Entrar</TabsTrigger>
+                <TabsTrigger value="signup">Criar Conta</TabsTrigger>
+              </TabsList>
 
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Sua senha"
-                    required
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loading}
-                >
-                  {loading ? "Entrando..." : "Entrar"}
-                </Button>
-                <div className="text-center">
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="text-sm"
-                    onClick={() => setForgotPassword(true)}
+              <TabsContent value="login" className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div>
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="login-password">Senha</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Sua senha"
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading}
                   >
-                    Esqueci minha senha
+                    {loading ? "Entrando..." : "Entrar"}
                   </Button>
-                </div>
-              </form>
-            </div>
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm"
+                      onClick={() => setForgotPassword(true)}
+                    >
+                      Esqueci minha senha
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup" className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div>
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-password">Senha</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading}
+                  >
+                    {loading ? "Criando conta..." : "Criar Conta"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
           )}
         </CardContent>
       </Card>
