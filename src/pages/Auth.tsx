@@ -353,8 +353,8 @@ const Auth = () => {
     }
   };
 
-  // Don't render anything if user is already authenticated
-  if (user) {
+  // Don't render anything if user is already authenticated (except for password change)
+  if (user && !needsPasswordChange && !resetPassword) {
     return null;
   }
 
