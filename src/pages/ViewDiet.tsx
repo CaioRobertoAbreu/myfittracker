@@ -11,7 +11,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
-import { Diet } from "@/types/diet";
+import { Diet, DietFoodConsumption, DailyProgress } from "@/types/diet";
+import { DailyProgressChart } from "@/components/DailyProgressChart";
 import { cn } from "@/lib/utils";
 
 const ViewDiet = () => {
@@ -21,15 +22,22 @@ const ViewDiet = () => {
   const [consumedFoods, setConsumedFoods] = useState<Set<string>>(new Set());
   const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dailyProgress, setDailyProgress] = useState<DailyProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (dietId) {
       loadDiet();
-      loadConsumedFoods();
     }
-  }, [dietId, selectedDate]);
+  }, [dietId]);
+
+  useEffect(() => {
+    if (diet && dietId) {
+      loadDailyProgress();
+    }
+  }, [diet, selectedDate]);
 
   const loadDiet = async () => {
     if (!dietId) return;
@@ -58,33 +66,53 @@ const ViewDiet = () => {
     }
   };
 
-  const loadConsumedFoods = () => {
+  const loadDailyProgress = async () => {
+    if (!dietId || !diet) return;
+    
+    setProgressLoading(true);
+    try {
+      const consumption = await dietService.getDailyConsumption(dietId, selectedDate);
+      const consumptionMap = new Map(consumption.map(c => [c.dietMealFoodId, c.isConsumed]));
+      setConsumedFoods(new Set(consumption.filter(c => c.isConsumed).map(c => c.dietMealFoodId)));
+      
+      if (diet) {
+        const progress = await dietService.getDailyProgress(diet, selectedDate);
+        setDailyProgress(progress);
+      }
+    } catch (error) {
+      console.error("Error loading daily progress:", error);
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  const toggleFoodConsumption = async (foodId: string) => {
     if (!dietId) return;
-    const dateKey = format(startOfDay(selectedDate), "yyyy-MM-dd");
-    const stored = localStorage.getItem(`consumed-foods-${dietId}-${dateKey}`);
-    if (stored) {
-      setConsumedFoods(new Set(JSON.parse(stored)));
-    } else {
-      setConsumedFoods(new Set());
+    
+    try {
+      await dietService.toggleFoodConsumption(dietId, foodId, selectedDate);
+      
+      // Update local state
+      const newConsumedFoods = new Set(consumedFoods);
+      if (newConsumedFoods.has(foodId)) {
+        newConsumedFoods.delete(foodId);
+      } else {
+        newConsumedFoods.add(foodId);
+      }
+      setConsumedFoods(newConsumedFoods);
+      
+      // Reload progress
+      if (diet) {
+        const progress = await dietService.getDailyProgress(diet, selectedDate);
+        setDailyProgress(progress);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar consumo do alimento",
+        variant: "destructive",
+      });
     }
-  };
-
-  const saveConsumedFoods = (foods: Set<string>) => {
-    if (dietId) {
-      const dateKey = format(startOfDay(selectedDate), "yyyy-MM-dd");
-      localStorage.setItem(`consumed-foods-${dietId}-${dateKey}`, JSON.stringify([...foods]));
-    }
-  };
-
-  const toggleFoodConsumption = (foodId: string) => {
-    const newConsumedFoods = new Set(consumedFoods);
-    if (newConsumedFoods.has(foodId)) {
-      newConsumedFoods.delete(foodId);
-    } else {
-      newConsumedFoods.add(foodId);
-    }
-    setConsumedFoods(newConsumedFoods);
-    saveConsumedFoods(newConsumedFoods);
   };
 
   const toggleMealExpansion = (mealId: string) => {
@@ -97,16 +125,29 @@ const ViewDiet = () => {
     setExpandedMeals(newExpandedMeals);
   };
 
-  const resetDayProgress = () => {
-    setConsumedFoods(new Set());
-    if (dietId) {
-      const dateKey = format(startOfDay(selectedDate), "yyyy-MM-dd");
-      localStorage.removeItem(`consumed-foods-${dietId}-${dateKey}`);
+  const resetDayProgress = async () => {
+    if (!dietId) return;
+    
+    try {
+      await dietService.resetDayProgress(dietId, selectedDate);
+      setConsumedFoods(new Set());
+      
+      if (diet) {
+        const progress = await dietService.getDailyProgress(diet, selectedDate);
+        setDailyProgress(progress);
+      }
+      
+      toast({
+        title: "Progresso resetado",
+        description: `Progresso do dia ${format(selectedDate, "dd/MM/yyyy")} foi resetado`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao resetar progresso do dia",
+        variant: "destructive",
+      });
     }
-    toast({
-      title: "Progresso resetado",
-      description: `Progresso do dia ${format(selectedDate, "dd/MM/yyyy")} foi resetado`,
-    });
   };
 
   const onDateChange = (date: Date | undefined) => {
@@ -311,6 +352,16 @@ const ViewDiet = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Progresso diário */}
+        {dailyProgress && (
+          <div className="mb-6">
+            <DailyProgressChart 
+              progress={dailyProgress} 
+              selectedDate={format(selectedDate, "dd/MM/yyyy")}
+            />
+          </div>
+        )}
 
         {/* Refeições */}
         <div className="space-y-6">

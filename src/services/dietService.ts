@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Diet, CreateDietRequest, UpdateDietRequest, NutritionSummary } from "@/types/diet";
+import { Diet, CreateDietRequest, UpdateDietRequest, NutritionSummary, DietFoodConsumption, DailyProgress } from "@/types/diet";
+import { format } from "date-fns";
 
 export const dietService = {
   async getAllDiets(): Promise<Diet[]> {
@@ -303,5 +304,159 @@ export const dietService = {
     if (error) {
       throw new Error(`Error marking diet as active: ${error.message}`);
     }
+  },
+
+  // Food consumption tracking functions
+  async getDailyConsumption(dietId: string, date: Date): Promise<DietFoodConsumption[]> {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated');
+    }
+
+    const dateString = format(date, 'yyyy-MM-dd');
+    
+    const { data, error } = await supabase
+      .from("diet_food_consumption")
+      .select("*")
+      .eq("diet_id", dietId)
+      .eq("user_id", user.id)
+      .eq("consumption_date", dateString);
+
+    if (error) {
+      throw new Error(`Error fetching daily consumption: ${error.message}`);
+    }
+
+    return data.map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      dietId: item.diet_id,
+      dietMealFoodId: item.diet_meal_food_id,
+      consumptionDate: item.consumption_date,
+      isConsumed: item.is_consumed,
+      consumedAt: item.consumed_at,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
+  },
+
+  async toggleFoodConsumption(dietId: string, foodId: string, date: Date): Promise<void> {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated');
+    }
+
+    const dateString = format(date, 'yyyy-MM-dd');
+    
+    // Check if consumption record exists
+    const { data: existing, error: selectError } = await supabase
+      .from("diet_food_consumption")
+      .select("*")
+      .eq("diet_id", dietId)
+      .eq("user_id", user.id)
+      .eq("diet_meal_food_id", foodId)
+      .eq("consumption_date", dateString)
+      .maybeSingle();
+
+    if (selectError) {
+      throw new Error(`Error checking consumption: ${selectError.message}`);
+    }
+
+    if (existing) {
+      // Update existing record
+      const { error: updateError } = await supabase
+        .from("diet_food_consumption")
+        .update({
+          is_consumed: !existing.is_consumed,
+          consumed_at: !existing.is_consumed ? new Date().toISOString() : null,
+        })
+        .eq("id", existing.id);
+
+      if (updateError) {
+        throw new Error(`Error updating consumption: ${updateError.message}`);
+      }
+    } else {
+      // Create new record
+      const { error: insertError } = await supabase
+        .from("diet_food_consumption")
+        .insert({
+          user_id: user.id,
+          diet_id: dietId,
+          diet_meal_food_id: foodId,
+          consumption_date: dateString,
+          is_consumed: true,
+          consumed_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        throw new Error(`Error creating consumption: ${insertError.message}`);
+      }
+    }
+  },
+
+  async resetDayProgress(dietId: string, date: Date): Promise<void> {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated');
+    }
+
+    const dateString = format(date, 'yyyy-MM-dd');
+    
+    const { error } = await supabase
+      .from("diet_food_consumption")
+      .delete()
+      .eq("diet_id", dietId)
+      .eq("user_id", user.id)
+      .eq("consumption_date", dateString);
+
+    if (error) {
+      throw new Error(`Error resetting day progress: ${error.message}`);
+    }
+  },
+
+  async getDailyProgress(diet: Diet, date: Date): Promise<DailyProgress> {
+    const consumption = await this.getDailyConsumption(diet.id, date);
+    const consumptionMap = new Map(consumption.map(c => [c.dietMealFoodId, c.isConsumed]));
+
+    let consumedProteinAnimal = 0;
+    let consumedProteinVegetable = 0;
+    let consumedCarbs = 0;
+    let consumedFat = 0;
+
+    const totalNutrition = this.calculateNutritionSummary(diet);
+
+    diet.meals.forEach(meal => {
+      meal.foods.forEach(food => {
+        if (consumptionMap.get(food.id)) {
+          consumedProteinAnimal += food.proteinAnimal;
+          consumedProteinVegetable += food.proteinVegetable;
+          consumedCarbs += food.carbs;
+          consumedFat += food.fat;
+        }
+      });
+    });
+
+    const consumedProtein = consumedProteinAnimal + consumedProteinVegetable;
+    const consumedCalories = (consumedProtein * 4) + (consumedCarbs * 4) + (consumedFat * 9);
+    
+    const progressPercentage = totalNutrition.totalCalories > 0 
+      ? (consumedCalories / totalNutrition.totalCalories) * 100 
+      : 0;
+
+    return {
+      consumedProteinAnimal,
+      consumedProteinVegetable,
+      consumedCarbs,
+      consumedFat,
+      consumedCalories,
+      totalProteinAnimal: totalNutrition.totalProteinAnimal,
+      totalProteinVegetable: totalNutrition.totalProteinVegetable,
+      totalCarbs: totalNutrition.totalCarbs,
+      totalFat: totalNutrition.totalFat,
+      totalCalories: totalNutrition.totalCalories,
+      progressPercentage,
+    };
   },
 };

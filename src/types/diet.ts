@@ -55,6 +55,18 @@ export interface UpdateDietRequest extends CreateDietRequest {
   id: string;
 }
 
+export interface DietFoodConsumption {
+  id: string;
+  userId: string;
+  dietId: string;
+  dietMealFoodId: string;
+  consumptionDate: string;
+  isConsumed: boolean;
+  consumedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface NutritionSummary {
   totalProteinAnimal: number;
   totalProteinVegetable: number;
@@ -64,4 +76,18 @@ export interface NutritionSummary {
   proteinPercentage: number;
   carbsPercentage: number;
   fatPercentage: number;
+}
+
+export interface DailyProgress {
+  consumedProteinAnimal: number;
+  consumedProteinVegetable: number;
+  consumedCarbs: number;
+  consumedFat: number;
+  consumedCalories: number;
+  totalProteinAnimal: number;
+  totalProteinVegetable: number;
+  totalCarbs: number;
+  totalFat: number;
+  totalCalories: number;
+  progressPercentage: number;
 }

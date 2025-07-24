@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      diet_food_consumption: {
+        Row: {
+          consumed_at: string | null
+          consumption_date: string
+          created_at: string
+          diet_id: string
+          diet_meal_food_id: string
+          id: string
+          is_consumed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          consumption_date: string
+          created_at?: string
+          diet_id: string
+          diet_meal_food_id: string
+          id?: string
+          is_consumed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          consumption_date?: string
+          created_at?: string
+          diet_id?: string
+          diet_meal_food_id?: string
+          id?: string
+          is_consumed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_food_consumption_diet_id_fkey"
+            columns: ["diet_id"]
+            isOneToOne: false
+            referencedRelation: "diets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diet_food_consumption_diet_meal_food_id_fkey"
+            columns: ["diet_meal_food_id"]
+            isOneToOne: false
+            referencedRelation: "diet_meal_foods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diet_meal_foods: {
         Row: {
           carbs: number | null
