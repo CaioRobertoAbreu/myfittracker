@@ -47,35 +47,47 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
               <div className="text-lg font-bold text-primary">
                 {Math.round(progress.consumedCalories)}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-foreground/80">
                 de {Math.round(progress.totalCalories)} kcal
               </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Restam: {Math.round(progress.totalCalories - progress.consumedCalories)} kcal
+              </div>
             </div>
             
-            <div className="text-center p-3 bg-secondary/10 rounded">
-              <div className="text-lg font-bold text-secondary">
+            <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded">
+              <div className="text-lg font-bold text-green-700 dark:text-green-400">
                 {(progress.consumedProteinAnimal + progress.consumedProteinVegetable).toFixed(1)}g
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-foreground/80">
                 de {(progress.totalProteinAnimal + progress.totalProteinVegetable).toFixed(1)}g proteína
               </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Restam: {((progress.totalProteinAnimal + progress.totalProteinVegetable) - (progress.consumedProteinAnimal + progress.consumedProteinVegetable)).toFixed(1)}g
+              </div>
             </div>
             
-            <div className="text-center p-3 bg-accent/10 rounded">
-              <div className="text-lg font-bold text-accent">
+            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded">
+              <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
                 {progress.consumedCarbs.toFixed(1)}g
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-foreground/80">
                 de {progress.totalCarbs.toFixed(1)}g carbs
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Restam: {(progress.totalCarbs - progress.consumedCarbs).toFixed(1)}g
               </div>
             </div>
             
-            <div className="text-center p-3 bg-muted/50 rounded">
-              <div className="text-lg font-bold">
+            <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/30 rounded">
+              <div className="text-lg font-bold text-orange-700 dark:text-orange-400">
                 {progress.consumedFat.toFixed(1)}g
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-foreground/80">
                 de {progress.totalFat.toFixed(1)}g gordura
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Restam: {(progress.totalFat - progress.consumedFat).toFixed(1)}g
               </div>
             </div>
           </div>
@@ -83,9 +95,9 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
           {/* Barras de progresso individuais */}
           <div className="space-y-3">
             <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Proteína</span>
-                <span>
+              <div className="flex justify-between text-sm text-foreground">
+                <span className="font-medium text-green-700 dark:text-green-400">Proteína</span>
+                <span className="font-medium">
                   {((progress.consumedProteinAnimal + progress.consumedProteinVegetable) / (progress.totalProteinAnimal + progress.totalProteinVegetable) * 100).toFixed(0)}%
                 </span>
               </div>
@@ -96,9 +108,9 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             </div>
             
             <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Carboidratos</span>
-                <span>
+              <div className="flex justify-between text-sm text-foreground">
+                <span className="font-medium text-blue-700 dark:text-blue-400">Carboidratos</span>
+                <span className="font-medium">
                   {(progress.consumedCarbs / progress.totalCarbs * 100).toFixed(0)}%
                 </span>
               </div>
@@ -109,9 +121,9 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             </div>
             
             <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span>Gorduras</span>
-                <span>
+              <div className="flex justify-between text-sm text-foreground">
+                <span className="font-medium text-orange-700 dark:text-orange-400">Gorduras</span>
+                <span className="font-medium">
                   {(progress.consumedFat / progress.totalFat * 100).toFixed(0)}%
                 </span>
               </div>
