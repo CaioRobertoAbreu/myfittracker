@@ -61,9 +61,9 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             {/* Proteína */}
             <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Proteína</div>
+              <div className="text-sm font-medium text-white mb-1">Proteína</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-green-700 dark:text-green-400">
+                <div className="text-lg font-bold text-white">
                   {(progress.consumedProteinAnimal + progress.consumedProteinVegetable).toFixed(1)}g
                 </div>
                 <div className="text-xs text-foreground/70">
@@ -77,9 +77,9 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             {/* Carboidratos */}
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="text-sm font-medium text-blue-700 dark:text-blue-400 mb-1">Carboidratos</div>
+              <div className="text-sm font-medium text-white mb-1">Carboidratos</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                <div className="text-lg font-bold text-white">
                   {progress.consumedCarbs.toFixed(1)}g
                 </div>
                 <div className="text-xs text-foreground/70">
@@ -93,9 +93,9 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             {/* Gorduras */}
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
-              <div className="text-sm font-medium text-orange-700 dark:text-orange-400 mb-1">Gorduras</div>
+              <div className="text-sm font-medium text-white mb-1">Gorduras</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-orange-700 dark:text-orange-400">
+                <div className="text-lg font-bold text-white">
                   {progress.consumedFat.toFixed(1)}g
                 </div>
                 <div className="text-xs text-foreground/70">
