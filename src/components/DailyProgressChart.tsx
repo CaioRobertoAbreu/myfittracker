@@ -41,16 +41,16 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             />
           </div>
 
-          {/* Resumo diário detalhado */}
+          {/* Progresso Macros */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Calorias */}
             <div className="text-center p-4 bg-primary/10 rounded-lg border">
-              <div className="text-sm font-medium text-primary/80 mb-1">Calorias</div>
+              <div className="text-sm font-medium text-white mb-1">Calorias</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-primary">
+                <div className="text-lg font-bold text-white">
                   {Math.round(progress.consumedCalories)} kcal
                 </div>
-                <div className="text-xs text-foreground/70">
+                <div className="text-xs text-white/70">
                   consumidas de {Math.round(progress.totalCalories)}
                 </div>
                 <div className="text-xs font-medium text-destructive">
@@ -61,12 +61,12 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             {/* Proteína */}
             <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Proteína</div>
+              <div className="text-sm font-medium text-white mb-1">Proteína</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-green-700 dark:text-green-400">
+                <div className="text-lg font-bold text-white">
                   {(progress.consumedProteinAnimal + progress.consumedProteinVegetable).toFixed(1)}g
                 </div>
-                <div className="text-xs text-foreground/70">
+                <div className="text-xs text-white/70">
                   consumidas de {(progress.totalProteinAnimal + progress.totalProteinVegetable).toFixed(1)}g
                 </div>
                 <div className="text-xs font-medium text-destructive">
@@ -77,12 +77,12 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             {/* Carboidratos */}
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="text-sm font-medium text-blue-700 dark:text-blue-400 mb-1">Carboidratos</div>
+              <div className="text-sm font-medium text-white mb-1">Carboidratos</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                <div className="text-lg font-bold text-white">
                   {progress.consumedCarbs.toFixed(1)}g
                 </div>
-                <div className="text-xs text-foreground/70">
+                <div className="text-xs text-white/70">
                   consumidos de {progress.totalCarbs.toFixed(1)}g
                 </div>
                 <div className="text-xs font-medium text-destructive">
@@ -93,60 +93,18 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             {/* Gorduras */}
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
-              <div className="text-sm font-medium text-orange-700 dark:text-orange-400 mb-1">Gorduras</div>
+              <div className="text-sm font-medium text-white mb-1">Gorduras</div>
               <div className="space-y-1">
-                <div className="text-lg font-bold text-orange-700 dark:text-orange-400">
+                <div className="text-lg font-bold text-white">
                   {progress.consumedFat.toFixed(1)}g
                 </div>
-                <div className="text-xs text-foreground/70">
+                <div className="text-xs text-white/70">
                   consumidas de {progress.totalFat.toFixed(1)}g
                 </div>
                 <div className="text-xs font-medium text-destructive">
                   Faltam: {(progress.totalFat - progress.consumedFat).toFixed(1)}g
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Barras de progresso individuais */}
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm text-foreground">
-                <span className="font-medium text-green-700 dark:text-green-400">Proteína</span>
-                <span className="font-medium">
-                  {((progress.consumedProteinAnimal + progress.consumedProteinVegetable) / (progress.totalProteinAnimal + progress.totalProteinVegetable) * 100).toFixed(0)}%
-                </span>
-              </div>
-              <Progress 
-                value={(progress.consumedProteinAnimal + progress.consumedProteinVegetable) / (progress.totalProteinAnimal + progress.totalProteinVegetable) * 100} 
-                className="h-2"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm text-foreground">
-                <span className="font-medium text-blue-700 dark:text-blue-400">Carboidratos</span>
-                <span className="font-medium">
-                  {(progress.consumedCarbs / progress.totalCarbs * 100).toFixed(0)}%
-                </span>
-              </div>
-              <Progress 
-                value={progress.consumedCarbs / progress.totalCarbs * 100} 
-                className="h-2"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm text-foreground">
-                <span className="font-medium text-orange-700 dark:text-orange-400">Gorduras</span>
-                <span className="font-medium">
-                  {(progress.consumedFat / progress.totalFat * 100).toFixed(0)}%
-                </span>
-              </div>
-              <Progress 
-                value={progress.consumedFat / progress.totalFat * 100} 
-                className="h-2"
-              />
             </div>
           </div>
         </div>
