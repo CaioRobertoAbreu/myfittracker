@@ -29,18 +29,6 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Progresso geral */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progresso Total</span>
-              <span className="font-medium">{progressPercentage}%</span>
-            </div>
-            <Progress 
-              value={progressPercentage} 
-              className="h-3"
-            />
-          </div>
-
           {/* Progresso Macros */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Calorias */}
