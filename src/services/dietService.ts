@@ -459,4 +459,29 @@ export const dietService = {
       progressPercentage,
     };
   },
+
+  async addFoodToMeal(mealId: string, food: {
+    foodName: string;
+    quantity: string;
+    proteinAnimal: number;
+    proteinVegetable: number;
+    carbs: number;
+    fat: number;
+  }): Promise<void> {
+    const { error } = await supabase
+      .from("diet_meal_foods")
+      .insert({
+        diet_meal_id: mealId,
+        food_name: food.foodName,
+        quantity: food.quantity,
+        protein_animal: food.proteinAnimal,
+        protein_vegetable: food.proteinVegetable,
+        carbs: food.carbs,
+        fat: food.fat,
+      });
+
+    if (error) {
+      throw new Error(`Error adding food to meal: ${error.message}`);
+    }
+  },
 };

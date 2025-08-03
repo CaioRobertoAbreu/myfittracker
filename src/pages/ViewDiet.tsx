@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, startOfDay, isToday, addDays, subDays } from "date-fns";
-import { ArrowLeft, Edit, Calendar as CalendarIcon, ChevronDown, ChevronUp, RotateCcw, Calendar as CalendarIconAlt, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Edit, Calendar as CalendarIcon, ChevronDown, ChevronUp, RotateCcw, Calendar as CalendarIconAlt, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { dietService } from "@/services/dietService";
 import { Diet, DietFoodConsumption, DailyProgress } from "@/types/diet";
 import { DailyProgressChart } from "@/components/DailyProgressChart";
+import { AddFoodDialog } from "@/components/AddFoodDialog";
 import { cn } from "@/lib/utils";
 
 const ViewDiet = () => {
@@ -24,6 +25,8 @@ const ViewDiet = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyProgress, setDailyProgress] = useState<DailyProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [addFoodDialogOpen, setAddFoodDialogOpen] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState<{ id: string; name: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -166,6 +169,40 @@ const ViewDiet = () => {
 
   const goToToday = () => {
     setSelectedDate(new Date());
+  };
+
+  const handleAddFood = (mealId: string, mealName: string) => {
+    setSelectedMeal({ id: mealId, name: mealName });
+    setAddFoodDialogOpen(true);
+  };
+
+  const handleAddFoodSubmit = async (food: {
+    foodName: string;
+    quantity: string;
+    proteinAnimal: number;
+    proteinVegetable: number;
+    carbs: number;
+    fat: number;
+  }) => {
+    if (!selectedMeal?.id) return;
+
+    try {
+      await dietService.addFoodToMeal(selectedMeal.id, food);
+      
+      toast({
+        title: "Sucesso",
+        description: "Alimento adicionado à refeição",
+      });
+
+      // Reload diet data
+      await loadDiet();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar alimento",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -372,25 +409,38 @@ const ViewDiet = () => {
                     </CardHeader>
                   </CollapsibleTrigger>
                   
-                  <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
-                    <CardContent className="pt-0">
-                      {meal.foods.length === 0 ? (
-                        <p className="text-muted-foreground text-center py-4">
-                          Nenhum alimento nesta refeição
-                        </p>
-                      ) : (
-                        <div className="space-y-4">
-                          {/* Lista de alimentos - Desktop */}
-                          <div className="hidden md:block space-y-2">
-                            <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
-                              <span>Consumido</span>
-                              <span>Alimento</span>
-                              <span>Quantidade</span>
-                              <span>Proteína (g)</span>
-                              <span>Carboidratos (g)</span>
-                              <span>Gorduras (g)</span>
-                              <span>Calorias</span>
-                            </div>
+                   <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
+                     <CardContent className="pt-0">
+                       {/* Botão para adicionar alimento */}
+                       <div className="mb-4">
+                         <Button
+                           onClick={() => handleAddFood(meal.id, meal.name)}
+                           variant="outline"
+                           size="sm"
+                           className="w-full sm:w-auto"
+                         >
+                           <Plus className="h-4 w-4 mr-2" />
+                           Adicionar Alimento
+                         </Button>
+                       </div>
+
+                       {meal.foods.length === 0 ? (
+                         <p className="text-muted-foreground text-center py-4">
+                           Nenhum alimento nesta refeição
+                         </p>
+                       ) : (
+                         <div className="space-y-4">
+                           {/* Lista de alimentos - Desktop */}
+                           <div className="hidden md:block space-y-2">
+                             <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
+                               <span>Consumido</span>
+                               <span>Alimento</span>
+                               <span>Quantidade</span>
+                               <span>Proteína (g)</span>
+                               <span>Carboidratos (g)</span>
+                               <span>Gorduras (g)</span>
+                               <span>Calorias</span>
+                             </div>
                             {meal.foods.map((food, foodIndex) => {
                               const totalProtein = food.proteinAnimal + food.proteinVegetable;
                               const calories = Math.round((totalProtein + food.carbs) * 4 + food.fat * 9);
@@ -522,19 +572,29 @@ const ViewDiet = () => {
                                 </span>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
+                           </div>
+                         </div>
+                       )}
+                     </CardContent>
+                   </CollapsibleContent>
+                 </Collapsible>
+               </Card>
+             );
+           })}
+         </div>
+
+         {/* Dialog para adicionar alimento */}
+         {selectedMeal && (
+           <AddFoodDialog
+             open={addFoodDialogOpen}
+             onOpenChange={setAddFoodDialogOpen}
+             mealName={selectedMeal.name}
+             onSubmit={handleAddFoodSubmit}
+           />
+         )}
+       </div>
+     </div>
+   );
+ };
 
 export default ViewDiet;
