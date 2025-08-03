@@ -306,52 +306,6 @@ const ViewDiet = () => {
           </div>
         </div>
 
-        {/* Resumo nutricional total */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Resumo Nutricional Total</CardTitle>
-              <Badge variant="outline" className="text-xs">
-                {format(selectedDate, "dd/MM/yyyy")}
-                {isToday(selectedDate) && " - Hoje"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-              <div className="text-center p-3 md:p-4 bg-primary/10 rounded">
-                <div className="text-xl md:text-2xl font-bold text-primary">
-                  {Math.round(summary.totalCalories)}
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground">Calorias</div>
-              </div>
-              <div className="text-center p-3 md:p-4 bg-secondary/10 rounded">
-                <div className="text-xl md:text-2xl font-bold text-secondary">
-                  {(summary.totalProteinAnimal + summary.totalProteinVegetable).toFixed(1)}g
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground">
-                  Proteína ({summary.proteinPercentage.toFixed(0)}%)
-                </div>
-              </div>
-              <div className="text-center p-3 md:p-4 bg-accent/10 rounded">
-                <div className="text-xl md:text-2xl font-bold text-accent">
-                  {summary.totalCarbs.toFixed(1)}g
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground">
-                  Carboidratos ({summary.carbsPercentage.toFixed(0)}%)
-                </div>
-              </div>
-              <div className="text-center p-3 md:p-4 bg-muted/50 rounded">
-                <div className="text-xl md:text-2xl font-bold">
-                  {summary.totalFat.toFixed(1)}g
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground">
-                  Gorduras ({summary.fatPercentage.toFixed(0)}%)
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Progresso diário */}
         {dailyProgress && (
