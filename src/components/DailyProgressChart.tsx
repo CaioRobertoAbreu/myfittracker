@@ -53,7 +53,7 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             </div>
             
             <div className="text-center p-3 bg-secondary/10 rounded">
-              <div className="text-lg font-bold text-secondary">
+              <div className="text-lg font-bold text-white">
                 {(progress.consumedProteinAnimal + progress.consumedProteinVegetable).toFixed(1)}g
               </div>
               <div className="text-xs text-muted-foreground">
@@ -62,7 +62,7 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             </div>
             
             <div className="text-center p-3 bg-accent/10 rounded">
-              <div className="text-lg font-bold text-accent">
+              <div className="text-lg font-bold text-white">
                 {progress.consumedCarbs.toFixed(1)}g
               </div>
               <div className="text-xs text-muted-foreground">
@@ -71,7 +71,7 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             </div>
             
             <div className="text-center p-3 bg-muted/50 rounded">
-              <div className="text-lg font-bold">
+              <div className="text-lg font-bold text-white">
                 {progress.consumedFat.toFixed(1)}g
               </div>
               <div className="text-xs text-muted-foreground">
