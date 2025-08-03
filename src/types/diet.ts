@@ -3,8 +3,7 @@ export interface DietMealFood {
   dietMealId: string;
   foodName: string;
   quantity: string;
-  proteinAnimal: number;
-  proteinVegetable: number;
+  protein: number;
   carbs: number;
   fat: number;
   createdAt: string;
@@ -43,8 +42,7 @@ export interface CreateDietRequest {
     foods: {
       foodName: string;
       quantity: string;
-      proteinAnimal: number;
-      proteinVegetable: number;
+      protein: number;
       carbs: number;
       fat: number;
     }[];
@@ -68,8 +66,7 @@ export interface DietFoodConsumption {
 }
 
 export interface NutritionSummary {
-  totalProteinAnimal: number;
-  totalProteinVegetable: number;
+  totalProtein: number;
   totalCarbs: number;
   totalFat: number;
   totalCalories: number;
@@ -79,13 +76,11 @@ export interface NutritionSummary {
 }
 
 export interface DailyProgress {
-  consumedProteinAnimal: number;
-  consumedProteinVegetable: number;
+  consumedProtein: number;
   consumedCarbs: number;
   consumedFat: number;
   consumedCalories: number;
-  totalProteinAnimal: number;
-  totalProteinVegetable: number;
+  totalProtein: number;
   totalCarbs: number;
   totalFat: number;
   totalCalories: number;

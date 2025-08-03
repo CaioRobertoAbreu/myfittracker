@@ -8,8 +8,7 @@ interface AddFoodFormProps {
   onSubmit: (food: {
     foodName: string;
     quantity: string;
-    proteinAnimal: number;
-    proteinVegetable: number;
+    protein: number;
     carbs: number;
     fat: number;
   }) => Promise<void>;
@@ -20,8 +19,7 @@ export const AddFoodForm = ({ onSubmit, onCancel }: AddFoodFormProps) => {
   const [formData, setFormData] = useState({
     foodName: "",
     quantity: "",
-    proteinAnimal: "",
-    proteinVegetable: "",
+    protein: "",
     carbs: "",
     fat: "",
   });
@@ -52,8 +50,7 @@ export const AddFoodForm = ({ onSubmit, onCancel }: AddFoodFormProps) => {
       await onSubmit({
         foodName: formData.foodName.trim(),
         quantity: formData.quantity.trim(),
-        proteinAnimal: parseFloat(formData.proteinAnimal) || 0,
-        proteinVegetable: parseFloat(formData.proteinVegetable) || 0,
+        protein: parseFloat(formData.protein) || 0,
         carbs: parseFloat(formData.carbs) || 0,
         fat: parseFloat(formData.fat) || 0,
       });
@@ -62,8 +59,7 @@ export const AddFoodForm = ({ onSubmit, onCancel }: AddFoodFormProps) => {
       setFormData({
         foodName: "",
         quantity: "",
-        proteinAnimal: "",
-        proteinVegetable: "",
+        protein: "",
         carbs: "",
         fat: "",
       });
@@ -99,28 +95,16 @@ export const AddFoodForm = ({ onSubmit, onCancel }: AddFoodFormProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <Label htmlFor="proteinAnimal">Proteína Animal (g)</Label>
+          <Label htmlFor="protein">Proteína (g)</Label>
           <Input
-            id="proteinAnimal"
+            id="protein"
             type="number"
             step="0.1"
             min="0"
-            value={formData.proteinAnimal}
-            onChange={(e) => handleInputChange("proteinAnimal", e.target.value)}
-            placeholder="0"
-          />
-        </div>
-        <div>
-          <Label htmlFor="proteinVegetable">Proteína Vegetal (g)</Label>
-          <Input
-            id="proteinVegetable"
-            type="number"
-            step="0.1"
-            min="0"
-            value={formData.proteinVegetable}
-            onChange={(e) => handleInputChange("proteinVegetable", e.target.value)}
+            value={formData.protein}
+            onChange={(e) => handleInputChange("protein", e.target.value)}
             placeholder="0"
           />
         </div>

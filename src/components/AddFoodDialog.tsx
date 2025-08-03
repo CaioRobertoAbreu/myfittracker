@@ -8,8 +8,7 @@ interface AddFoodDialogProps {
   onSubmit: (food: {
     foodName: string;
     quantity: string;
-    proteinAnimal: number;
-    proteinVegetable: number;
+    protein: number;
     carbs: number;
     fat: number;
   }) => Promise<void>;
@@ -19,8 +18,7 @@ export const AddFoodDialog = ({ open, onOpenChange, mealName, onSubmit }: AddFoo
   const handleSubmit = async (food: {
     foodName: string;
     quantity: string;
-    proteinAnimal: number;
-    proteinVegetable: number;
+    protein: number;
     carbs: number;
     fat: number;
   }) => {

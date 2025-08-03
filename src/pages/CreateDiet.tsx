@@ -17,8 +17,7 @@ import { cn } from "@/lib/utils";
 interface DietFood {
   foodName: string;
   quantity: string;
-  proteinAnimal: number;
-  proteinVegetable: number;
+  protein: number;
   carbs: number;
   fat: number;
 }
@@ -70,8 +69,7 @@ const CreateDiet = () => {
     const newFood: DietFood = {
       foodName: "",
       quantity: "",
-      proteinAnimal: "" as any,
-      proteinVegetable: "" as any,
+      protein: "" as any,
       carbs: "" as any,
       fat: "" as any
     };
@@ -132,8 +130,7 @@ const CreateDiet = () => {
               .map(food => ({
                 foodName: food.foodName.trim(),
                 quantity: food.quantity.trim(),
-                proteinAnimal: Number(food.proteinAnimal) || 0,
-                proteinVegetable: Number(food.proteinVegetable) || 0,
+                protein: Number(food.protein) || 0,
                 carbs: Number(food.carbs) || 0,
                 fat: Number(food.fat) || 0,
               }))
@@ -282,41 +279,33 @@ const CreateDiet = () => {
                       <div className="space-y-3">
                         {/* Layout Desktop */}
                         <div className="hidden lg:block">
-                          <div className="grid grid-cols-7 gap-2 text-xs font-medium text-muted-foreground mb-2 px-3">
-                            <span>Alimento</span>
-                            <span>Quantidade</span>
-                            <span>Proteína (A) g</span>
-                            <span>Proteína (V) g</span>
-                            <span>Carboidratos g</span>
-                            <span>Gorduras g</span>
-                            <span></span>
-                          </div>
-                          {meal.foods.map((food, foodIndex) => (
-                            <div key={foodIndex} className="grid grid-cols-7 gap-2 items-center p-3 border rounded">
-                              <Input
-                                placeholder="Alimento"
-                                value={food.foodName}
-                                onChange={(e) => updateFood(mealIndex, foodIndex, "foodName", e.target.value)}
-                              />
-                              <Input
-                                placeholder="Qtd"
-                                value={food.quantity}
-                                onChange={(e) => updateFood(mealIndex, foodIndex, "quantity", e.target.value)}
-                              />
-                              <Input
-                                type="number"
-                                step="0.1"
-                                placeholder="0"
-                                value={food.proteinAnimal}
-                                onChange={(e) => updateFood(mealIndex, foodIndex, "proteinAnimal", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                              />
-                              <Input
-                                type="number"
-                                step="0.1"
-                                placeholder="0"
-                                value={food.proteinVegetable}
-                                onChange={(e) => updateFood(mealIndex, foodIndex, "proteinVegetable", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                              />
+                           <div className="grid grid-cols-6 gap-2 text-xs font-medium text-muted-foreground mb-2 px-3">
+                             <span>Alimento</span>
+                             <span>Quantidade</span>
+                             <span>Proteína (g)</span>
+                             <span>Carboidratos g</span>
+                             <span>Gorduras g</span>
+                             <span></span>
+                           </div>
+                           {meal.foods.map((food, foodIndex) => (
+                             <div key={foodIndex} className="grid grid-cols-6 gap-2 items-center p-3 border rounded">
+                               <Input
+                                 placeholder="Alimento"
+                                 value={food.foodName}
+                                 onChange={(e) => updateFood(mealIndex, foodIndex, "foodName", e.target.value)}
+                               />
+                               <Input
+                                 placeholder="Qtd"
+                                 value={food.quantity}
+                                 onChange={(e) => updateFood(mealIndex, foodIndex, "quantity", e.target.value)}
+                               />
+                               <Input
+                                 type="number"
+                                 step="0.1"
+                                 placeholder="0"
+                                 value={food.protein}
+                                 onChange={(e) => updateFood(mealIndex, foodIndex, "protein", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                               />
                               <Input
                                 type="number"
                                 step="0.1"
@@ -371,28 +360,18 @@ const CreateDiet = () => {
                                   onChange={(e) => updateFood(mealIndex, foodIndex, "quantity", e.target.value)}
                                 />
                               </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">Proteína Animal (g)</Label>
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    placeholder="0"
-                                    value={food.proteinAnimal}
-                                    onChange={(e) => updateFood(mealIndex, foodIndex, "proteinAnimal", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">Proteína Vegetal (g)</Label>
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    placeholder="0"
-                                    value={food.proteinVegetable}
-                                    onChange={(e) => updateFood(mealIndex, foodIndex, "proteinVegetable", e.target.value === "" ? "" : Number(e.target.value) || 0)}
-                                  />
-                                </div>
-                                <div>
+                               <div className="grid grid-cols-1 gap-2">
+                                 <div>
+                                   <Label className="text-xs text-muted-foreground">Proteína (g)</Label>
+                                   <Input
+                                     type="number"
+                                     step="0.1"
+                                     placeholder="0"
+                                     value={food.protein}
+                                     onChange={(e) => updateFood(mealIndex, foodIndex, "protein", e.target.value === "" ? "" : Number(e.target.value) || 0)}
+                                   />
+                                 </div>
+                               <div className="grid grid-cols-2 gap-2">
                                   <Label className="text-xs text-muted-foreground">Carboidratos (g)</Label>
                                   <Input
                                     type="number"
@@ -425,7 +404,7 @@ const CreateDiet = () => {
                               <div>
                                 <span className="text-muted-foreground">Proteína: </span>
                                 <span className="font-medium">
-                                  {(meal.foods.reduce((sum, food) => sum + (Number(food.proteinAnimal) || 0) + (Number(food.proteinVegetable) || 0), 0)).toFixed(1)}g
+                                  {(meal.foods.reduce((sum, food) => sum + (Number(food.protein) || 0), 0)).toFixed(1)}g
                                 </span>
                               </div>
                               <div>
@@ -444,8 +423,8 @@ const CreateDiet = () => {
                                 <span className="text-muted-foreground">Calorias: </span>
                                 <span className="font-medium">
                                   {Math.round(
-                                    meal.foods.reduce((sum, food) => 
-                                      sum + (((Number(food.proteinAnimal) || 0) + (Number(food.proteinVegetable) || 0) + (Number(food.carbs) || 0)) * 4) + ((Number(food.fat) || 0) * 9), 0
+                                     meal.foods.reduce((sum, food) => 
+                                       sum + (((Number(food.protein) || 0) + (Number(food.carbs) || 0)) * 4) + ((Number(food.fat) || 0) * 9), 0
                                     )
                                   )} kcal
                                 </span>
@@ -472,9 +451,9 @@ const CreateDiet = () => {
                   <div className="text-center p-3 md:p-4 bg-primary/10 rounded">
                     <div className="text-xl md:text-2xl font-bold text-primary">
                       {Math.round(
-                        meals.reduce((mealSum, meal) =>
-                          mealSum + meal.foods.reduce((foodSum, food) =>
-                            foodSum + (((Number(food.proteinAnimal) || 0) + (Number(food.proteinVegetable) || 0) + (Number(food.carbs) || 0)) * 4) + ((Number(food.fat) || 0) * 9), 0
+                         meals.reduce((mealSum, meal) =>
+                           mealSum + meal.foods.reduce((foodSum, food) =>
+                             foodSum + (((Number(food.protein) || 0) + (Number(food.carbs) || 0)) * 4) + ((Number(food.fat) || 0) * 9), 0
                           ), 0
                         )
                       )}
@@ -483,9 +462,9 @@ const CreateDiet = () => {
                   </div>
                   <div className="text-center p-3 md:p-4 bg-secondary/10 rounded">
                     <div className="text-xl md:text-2xl font-bold text-secondary">
-                      {(meals.reduce((mealSum, meal) =>
-                        mealSum + meal.foods.reduce((foodSum, food) =>
-                          foodSum + (Number(food.proteinAnimal) || 0) + (Number(food.proteinVegetable) || 0), 0
+                       {(meals.reduce((mealSum, meal) =>
+                         mealSum + meal.foods.reduce((foodSum, food) =>
+                           foodSum + (Number(food.protein) || 0), 0
                         ), 0
                       )).toFixed(1)}g
                     </div>

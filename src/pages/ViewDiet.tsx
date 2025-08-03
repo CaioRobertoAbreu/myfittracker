@@ -179,8 +179,7 @@ const ViewDiet = () => {
   const handleAddFoodSubmit = async (food: {
     foodName: string;
     quantity: string;
-    proteinAnimal: number;
-    proteinVegetable: number;
+    protein: number;
     carbs: number;
     fat: number;
   }) => {
@@ -442,8 +441,8 @@ const ViewDiet = () => {
                                <span>Calorias</span>
                              </div>
                             {meal.foods.map((food, foodIndex) => {
-                              const totalProtein = food.proteinAnimal + food.proteinVegetable;
-                              const calories = Math.round((totalProtein + food.carbs) * 4 + food.fat * 9);
+                               const totalProtein = food.protein;
+                               const calories = Math.round((totalProtein + food.carbs) * 4 + food.fat * 9);
                               const isConsumed = consumedFoods.has(food.id);
                               
                               return (
@@ -466,14 +465,9 @@ const ViewDiet = () => {
                                   <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
                                     {food.quantity}
                                   </span>
-                                  <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
-                                    {totalProtein.toFixed(1)}
-                                    {food.proteinAnimal > 0 && food.proteinVegetable > 0 && (
-                                      <span className="text-xs text-muted-foreground ml-1">
-                                        (A:{food.proteinAnimal.toFixed(1)} V:{food.proteinVegetable.toFixed(1)})
-                                      </span>
-                                    )}
-                                  </span>
+                                   <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
+                                     {totalProtein.toFixed(1)}
+                                   </span>
                                   <span className={isConsumed ? 'line-through text-muted-foreground' : ''}>
                                     {food.carbs.toFixed(1)}
                                   </span>
@@ -491,8 +485,8 @@ const ViewDiet = () => {
                           {/* Lista de alimentos - Mobile */}
                           <div className="md:hidden space-y-3">
                             {meal.foods.map((food, foodIndex) => {
-                              const totalProtein = food.proteinAnimal + food.proteinVegetable;
-                              const calories = Math.round((totalProtein + food.carbs) * 4 + food.fat * 9);
+                           const totalProtein = food.protein;
+                           const calories = Math.round((totalProtein + food.carbs) * 4 + food.fat * 9);
                               const isConsumed = consumedFoods.has(food.id);
                               
                               return (
@@ -517,13 +511,8 @@ const ViewDiet = () => {
                                   </div>
                                   <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div className={isConsumed ? 'line-through text-muted-foreground' : ''}>
-                                      <strong>Proteína:</strong> {totalProtein.toFixed(1)}g
-                                      {food.proteinAnimal > 0 && food.proteinVegetable > 0 && (
-                                        <div className="text-xs text-muted-foreground">
-                                          (A:{food.proteinAnimal.toFixed(1)} V:{food.proteinVegetable.toFixed(1)})
-                                        </div>
-                                      )}
-                                    </div>
+                                       <strong>Proteína:</strong> {totalProtein.toFixed(1)}g
+                                     </div>
                                     <div className={isConsumed ? 'line-through text-muted-foreground' : ''}>
                                       <strong>Carboidratos:</strong> {food.carbs.toFixed(1)}g
                                     </div>
@@ -546,7 +535,7 @@ const ViewDiet = () => {
                               <div>
                                 <span className="text-muted-foreground">Proteína: </span>
                                 <span className="font-medium">
-                                  {(meal.foods.reduce((sum, food) => sum + food.proteinAnimal + food.proteinVegetable, 0)).toFixed(1)}g
+                                  {(meal.foods.reduce((sum, food) => sum + food.protein, 0)).toFixed(1)}g
                                 </span>
                               </div>
                               <div>
@@ -565,8 +554,8 @@ const ViewDiet = () => {
                                 <span className="text-muted-foreground">Calorias: </span>
                                 <span className="font-medium">
                                   {Math.round(
-                                    meal.foods.reduce((sum, food) => 
-                                      sum + ((food.proteinAnimal + food.proteinVegetable + food.carbs) * 4) + (food.fat * 9), 0
+                                     meal.foods.reduce((sum, food) => 
+                                       sum + ((food.protein + food.carbs) * 4) + (food.fat * 9), 0
                                     )
                                   )} kcal
                                 </span>

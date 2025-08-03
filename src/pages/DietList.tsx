@@ -207,7 +207,7 @@ const DietList = () => {
                         <div className="flex justify-between text-sm">
                           <span>Proteína:</span>
                           <span className="font-medium">
-                            {(summary.totalProteinAnimal + summary.totalProteinVegetable).toFixed(1)}g 
+                            {(summary.totalProtein).toFixed(1)}g 
                             ({summary.proteinPercentage.toFixed(0)}%)
                           </span>
                         </div>

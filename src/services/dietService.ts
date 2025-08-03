@@ -42,8 +42,7 @@ export const dietService = {
             dietMealId: food.diet_meal_id,
             foodName: food.food_name,
             quantity: food.quantity,
-            proteinAnimal: Number(food.protein_animal) || 0,
-            proteinVegetable: Number(food.protein_vegetable) || 0,
+            protein: (Number(food.protein_animal) || 0) + (Number(food.protein_vegetable) || 0),
             carbs: Number(food.carbs) || 0,
             fat: Number(food.fat) || 0,
             createdAt: food.created_at,
@@ -94,8 +93,7 @@ export const dietService = {
             dietMealId: food.diet_meal_id,
             foodName: food.food_name,
             quantity: food.quantity,
-            proteinAnimal: Number(food.protein_animal) || 0,
-            proteinVegetable: Number(food.protein_vegetable) || 0,
+            protein: (Number(food.protein_animal) || 0) + (Number(food.protein_vegetable) || 0),
             carbs: Number(food.carbs) || 0,
             fat: Number(food.fat) || 0,
             createdAt: food.created_at,
@@ -154,8 +152,8 @@ export const dietService = {
               diet_meal_id: meal.id,
               food_name: food.foodName,
               quantity: food.quantity,
-              protein_animal: food.proteinAnimal,
-              protein_vegetable: food.proteinVegetable,
+              protein_animal: food.protein,
+              protein_vegetable: 0,
               carbs: food.carbs,
               fat: food.fat,
             }))
@@ -220,8 +218,8 @@ export const dietService = {
               diet_meal_id: meal.id,
               food_name: food.foodName,
               quantity: food.quantity,
-              protein_animal: food.proteinAnimal,
-              protein_vegetable: food.proteinVegetable,
+              protein_animal: food.protein,
+              protein_vegetable: 0,
               carbs: food.carbs,
               fat: food.fat,
             }))
@@ -248,22 +246,18 @@ export const dietService = {
   },
 
   calculateNutritionSummary(diet: Diet): NutritionSummary {
-    let totalProteinAnimal = 0;
-    let totalProteinVegetable = 0;
+    let totalProtein = 0;
     let totalCarbs = 0;
     let totalFat = 0;
 
     diet.meals.forEach(meal => {
       meal.foods.forEach(food => {
-        totalProteinAnimal += food.proteinAnimal;
-        totalProteinVegetable += food.proteinVegetable;
+        totalProtein += food.protein;
         totalCarbs += food.carbs;
         totalFat += food.fat;
       });
     });
 
-    const totalProtein = totalProteinAnimal + totalProteinVegetable;
-    
     // Calculate calories (4 kcal/g for protein and carbs, 9 kcal/g for fat)
     const totalCalories = (totalProtein * 4) + (totalCarbs * 4) + (totalFat * 9);
 
@@ -273,8 +267,7 @@ export const dietService = {
     const fatPercentage = totalCalories > 0 ? ((totalFat * 9) / totalCalories) * 100 : 0;
 
     return {
-      totalProteinAnimal,
-      totalProteinVegetable,
+      totalProtein,
       totalCarbs,
       totalFat,
       totalCalories,
@@ -420,8 +413,7 @@ export const dietService = {
     const consumption = await this.getDailyConsumption(diet.id, date);
     const consumptionMap = new Map(consumption.map(c => [c.dietMealFoodId, c.isConsumed]));
 
-    let consumedProteinAnimal = 0;
-    let consumedProteinVegetable = 0;
+    let consumedProtein = 0;
     let consumedCarbs = 0;
     let consumedFat = 0;
 
@@ -430,15 +422,13 @@ export const dietService = {
     diet.meals.forEach(meal => {
       meal.foods.forEach(food => {
         if (consumptionMap.get(food.id)) {
-          consumedProteinAnimal += food.proteinAnimal;
-          consumedProteinVegetable += food.proteinVegetable;
+          consumedProtein += food.protein;
           consumedCarbs += food.carbs;
           consumedFat += food.fat;
         }
       });
     });
 
-    const consumedProtein = consumedProteinAnimal + consumedProteinVegetable;
     const consumedCalories = (consumedProtein * 4) + (consumedCarbs * 4) + (consumedFat * 9);
     
     const progressPercentage = totalNutrition.totalCalories > 0 
@@ -446,13 +436,11 @@ export const dietService = {
       : 0;
 
     return {
-      consumedProteinAnimal,
-      consumedProteinVegetable,
+      consumedProtein,
       consumedCarbs,
       consumedFat,
       consumedCalories,
-      totalProteinAnimal: totalNutrition.totalProteinAnimal,
-      totalProteinVegetable: totalNutrition.totalProteinVegetable,
+      totalProtein: totalNutrition.totalProtein,
       totalCarbs: totalNutrition.totalCarbs,
       totalFat: totalNutrition.totalFat,
       totalCalories: totalNutrition.totalCalories,
@@ -463,8 +451,7 @@ export const dietService = {
   async addFoodToMeal(mealId: string, food: {
     foodName: string;
     quantity: string;
-    proteinAnimal: number;
-    proteinVegetable: number;
+    protein: number;
     carbs: number;
     fat: number;
   }): Promise<void> {
@@ -474,8 +461,8 @@ export const dietService = {
         diet_meal_id: mealId,
         food_name: food.foodName,
         quantity: food.quantity,
-        protein_animal: food.proteinAnimal,
-        protein_vegetable: food.proteinVegetable,
+        protein_animal: food.protein,
+        protein_vegetable: 0,
         carbs: food.carbs,
         fat: food.fat,
       });

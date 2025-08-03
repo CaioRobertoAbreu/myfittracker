@@ -54,10 +54,10 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
             
             <div className="text-center p-3 bg-secondary/10 rounded">
               <div className="text-lg font-bold text-white">
-                {(progress.consumedProteinAnimal + progress.consumedProteinVegetable).toFixed(1)}g
+                {progress.consumedProtein.toFixed(1)}g
               </div>
               <div className="text-xs text-muted-foreground">
-                de {(progress.totalProteinAnimal + progress.totalProteinVegetable).toFixed(1)}g proteína
+                de {progress.totalProtein.toFixed(1)}g proteína
               </div>
             </div>
             
@@ -86,11 +86,11 @@ export const DailyProgressChart = ({ progress, selectedDate }: DailyProgressChar
               <div className="flex justify-between text-xs">
                 <span>Proteína</span>
                 <span>
-                  {((progress.consumedProteinAnimal + progress.consumedProteinVegetable) / (progress.totalProteinAnimal + progress.totalProteinVegetable) * 100).toFixed(0)}%
+                  {(progress.consumedProtein / progress.totalProtein * 100).toFixed(0)}%
                 </span>
               </div>
               <Progress 
-                value={(progress.consumedProteinAnimal + progress.consumedProteinVegetable) / (progress.totalProteinAnimal + progress.totalProteinVegetable) * 100} 
+                value={progress.consumedProtein / progress.totalProtein * 100}
                 className="h-2"
               />
             </div>
