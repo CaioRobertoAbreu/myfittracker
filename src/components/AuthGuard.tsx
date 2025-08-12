@@ -16,12 +16,14 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   useEffect(() => {
     // Listen for auth state changes (no redirects here)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      console.debug('[AuthGuard] onAuthStateChange', { event, hasUser: !!nextSession?.user });
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
     });
 
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.debug('[AuthGuard] getSession', { hasUser: !!session?.user });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
