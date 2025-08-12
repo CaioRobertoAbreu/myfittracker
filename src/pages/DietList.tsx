@@ -134,16 +134,16 @@ const DietList = () => {
                     onClick={() => navigate(`/dietas/${diet.id}`)}
                   >
                     <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate">{diet.name}</span>
+                      <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="truncate max-w-full">{diet.name}</span>
                           {diet.isExpired && (
                             <Badge variant="destructive" className="text-xs">
                               Vencida
                             </Badge>
                           )}
                         </div>
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
