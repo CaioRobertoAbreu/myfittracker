@@ -14,34 +14,28 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Redirect to auth if not authenticated
-        if (!session?.user) {
-          navigate("/auth");
-        }
-      }
-    );
+    // Listen for auth state changes (no redirects here)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+    });
 
-    // THEN check for existing session
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // Redirect to auth if not authenticated
-      if (!session?.user) {
-        navigate("/auth");
-      }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Redirect only after initial load to avoid flicker/loops during token refresh
+  useEffect(() => {
+    if (!loading && !session?.user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [loading, session, navigate]);
 
   if (loading) {
     return (
