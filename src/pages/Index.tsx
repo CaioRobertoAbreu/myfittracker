@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { Dumbbell, Apple, LogOut, User } from "lucide-react";
+import { Dumbbell, Apple, LogOut, User, LineChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -167,6 +167,20 @@ const Index = () => {
               <CardContent>
                 <p className="text-muted-foreground">
                   Organize suas refeições, controle macronutrientes e acompanhe seu progresso nutricional.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/peso")}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <LineChart className="h-8 w-8 text-primary" />
+                  Peso
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Registre seu peso e acompanhe a evolução ao longo do tempo.
                 </p>
               </CardContent>
             </Card>

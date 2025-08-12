@@ -14,6 +14,7 @@ import EditDiet from "./pages/EditDiet";
 import ViewDiet from "./pages/ViewDiet";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Weight from "./pages/Weight";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/dietas/nova" element={<CreateDiet />} />
           <Route path="/dietas/:dietId" element={<ViewDiet />} />
           <Route path="/dietas/:dietId/editar" element={<EditDiet />} />
+          <Route path="/peso" element={<Weight />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
